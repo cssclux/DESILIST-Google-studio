@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { generateDescription, suggestCategory, suggestPrice } from '../services/geminiService';
 import type { Listing, Location } from '../types';
 import { CATEGORIES, LOCATIONS, CURRENCIES } from '../constants';
-import { XMarkIcon, SparklesIcon, SpinnerIcon, ExclamationCircleIcon, PhotoIcon } from './icons/Icons';
+import { XMarkIcon, SparklesIcon, SpinnerIcon, ExclamationCircleIcon, PhotoIcon, MapPinIcon } from './icons/Icons';
 
 interface PostAdModalProps {
   onClose: () => void;
@@ -22,9 +22,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ onClose, onSubmit }) =
   const [imageUrl, setImageUrl] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
-  const [selectedCountry, setSelectedCountry] = useState(Object.keys(LOCATIONS)[0] || '');
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
+  const [location, setLocation] = useState<Location | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const [deliveryMethods, setDeliveryMethods] = useState<Set<DeliveryMethod>>(new Set());
   const [paymentMethods, setPaymentMethods] = useState<Set<PaymentMethod>>(new Set());
@@ -34,28 +34,89 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ onClose, onSubmit }) =
   const [isSuggestingCat, setIsSuggestingCat] = useState(false);
   const [isSuggestingPrice, setIsSuggestingPrice] = useState(false);
   const [aiError, setAiError] = useState<{ field: 'desc' | 'cat' | 'price'; message: string } | null>(null);
-  
-  const availableStates = useMemo(() => {
-    return selectedCountry ? Object.keys(LOCATIONS[selectedCountry] || {}).sort() : [];
-  }, [selectedCountry]);
 
-  const availableCities = useMemo(() => {
-    return selectedCountry && selectedState 
-      ? (LOCATIONS[selectedCountry]?.[selectedState] || []).sort() 
-      : [];
-  }, [selectedCountry, selectedState]);
+  useEffect(() => {
+    if ((window as any).google && mapRef.current && searchInputRef.current) {
+      const google = (window as any).google;
+      const nigeriaCenter = { lat: 9.0820, lng: 8.6753 };
+      const map = new google.maps.Map(mapRef.current, {
+        center: nigeriaCenter,
+        zoom: 6,
+        disableDefaultUI: true,
+      });
 
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCountry(e.target.value);
-    setSelectedState('');
-    setSelectedCity('');
-  };
-  
-  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedState(e.target.value);
-    setSelectedCity('');
-  };
-  
+      const marker = new google.maps.Marker({
+        map,
+        draggable: true,
+        anchorPoint: new google.maps.Point(0, -29),
+      });
+
+      const autocomplete = new google.maps.places.Autocomplete(searchInputRef.current);
+      autocomplete.setFields(['address_components', 'geometry', 'name']);
+      
+      const updateLocationFromPlace = (place: any) => {
+        const addressComponents = place.address_components;
+        let city = '', state = '', country = '';
+        if (addressComponents) {
+          for (const component of addressComponents) {
+            const types = component.types;
+            if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+              city = component.long_name;
+            }
+            if (types.includes('administrative_area_level_1')) {
+              state = component.long_name;
+            }
+            if (types.includes('country')) {
+              country = component.long_name;
+            }
+          }
+        }
+        
+        const loc = place.geometry?.location;
+        if (loc) {
+          setLocation({
+            lat: loc.lat(),
+            lng: loc.lng(),
+            address: place.formatted_address || '',
+            city: city || 'Unknown',
+            state: state || 'Unknown',
+            country: country || 'Nigeria'
+          });
+        }
+      };
+      
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
+          return;
+        }
+
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);
+        marker.setPosition(place.geometry.location);
+        marker.setVisible(true);
+        updateLocationFromPlace(place);
+      });
+
+      marker.addListener('dragend', () => {
+        const newPosition = marker.getPosition();
+        if (newPosition) {
+          const geocoder = new google.maps.Geocoder();
+          geocoder.geocode({ location: newPosition }, (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+              updateLocationFromPlace(results[0]);
+              if(searchInputRef.current) {
+                searchInputRef.current.value = results[0].formatted_address || '';
+              }
+            } else {
+              setLocation(prev => prev ? {...prev, lat: newPosition.lat(), lng: newPosition.lng()} : null);
+            }
+          });
+        }
+      });
+    }
+  }, []);
+
   const handleCheckboxChange = <T extends string>(setter: React.Dispatch<React.SetStateAction<Set<T>>>, item: T) => {
       setter(prev => {
           const next = new Set(prev);
@@ -147,8 +208,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ onClose, onSubmit }) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCountry || !selectedState || !selectedCity) {
-      alert('Please select a complete location.');
+    if (!location) {
+      alert('Please select a location on the map.');
       return;
     }
 
@@ -160,11 +221,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ onClose, onSubmit }) =
       description,
       price: finalPrice,
       category,
-      location: {
-        country: selectedCountry,
-        state: selectedState,
-        city: selectedCity,
-      },
+      location,
       imageUrl: imageUrl || `https://picsum.photos/seed/${title.replace(/\s/g, '')}/400/300`,
       postDate: new Date().toISOString(),
       deliveryMethods: Array.from(deliveryMethods),
@@ -251,6 +308,24 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ onClose, onSubmit }) =
               </div>
             </div>
 
+            <div className="border-t border-slate-300 dark:border-white/10 pt-4">
+              <label htmlFor="location-search" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Location</label>
+              <div className="relative mt-1">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <MapPinIcon className="h-5 w-5 text-slate-400" />
+                </span>
+                <input
+                  id="location-search"
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search for an address or area"
+                  className="block w-full pl-10 bg-slate-100 dark:bg-white/5 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-secondary focus:border-secondary text-slate-900 dark:text-slate-100"
+                />
+              </div>
+              <div ref={mapRef} className="mt-2 h-64 w-full rounded-md bg-slate-200 dark:bg-slate-700"></div>
+              {location && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Selected: <span className="font-semibold">{location.address}</span></p>}
+            </div>
+
             <div className="border-t border-slate-300 dark:border-white/10 pt-4 space-y-4">
                  <fieldset>
                     <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">Delivery Methods</legend>
@@ -305,29 +380,6 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ onClose, onSubmit }) =
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label htmlFor="country" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Country</label>
-                    <select id="country" value={selectedCountry} onChange={handleCountryChange} className="mt-1 block w-full border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-white/5 rounded-md shadow-sm focus:ring-secondary focus:border-secondary text-slate-900 dark:text-slate-100" required>
-                        <option disabled value="" className="text-black">Select Country</option>
-                        {Object.keys(LOCATIONS).sort().map(country => <option key={country} value={country} className="text-black">{country}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <label htmlFor="state" className="block text-sm font-medium text-slate-700 dark:text-slate-300">State/Region</label>
-                    <select id="state" value={selectedState} onChange={handleStateChange} className="mt-1 block w-full border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-white/5 rounded-md shadow-sm focus:ring-secondary focus:border-secondary text-slate-900 dark:text-slate-100" required disabled={!selectedCountry}>
-                        <option disabled value="" className="text-black">Select State/Region</option>
-                        {availableStates.map(state => <option key={state} value={state} className="text-black">{state}</option>)}
-                    </select>
-                </div>
-                 <div>
-                    <label htmlFor="city" className="block text-sm font-medium text-slate-700 dark:text-slate-300">City</label>
-                    <select id="city" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} className="mt-1 block w-full border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-white/5 rounded-md shadow-sm focus:ring-secondary focus:border-secondary text-slate-900 dark:text-slate-100" required disabled={!selectedState}>
-                        <option disabled value="" className="text-black">Select City</option>
-                        {availableCities.map(city => <option key={city} value={city} className="text-black">{city}</option>)}
-                    </select>
-                </div>
-            </div>
           </fieldset>
 
           <div className="flex justify-end pt-4 mt-4 border-t border-slate-300 dark:border-white/10">

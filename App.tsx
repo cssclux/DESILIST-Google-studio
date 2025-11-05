@@ -113,8 +113,8 @@ const App: React.FC = () => {
         >
           <div className="absolute inset-0 bg-black/60"></div>
           <div className="relative z-10 text-center py-20 md:py-24 px-4 container mx-auto">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">Find Anything Across Africa</h1>
-            <p className="text-lg text-slate-200 max-w-2xl mx-auto">The continent's marketplace for goods, services, and opportunities.</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">Your Market, Your Price - OJA.ng</h1>
+            <p className="text-lg text-slate-200 max-w-2xl mx-auto">Nigeria's trusted online marketplace for everything you need.</p>
             
             <div className="mt-8 max-w-3xl mx-auto">
               <div className="bg-white/50 dark:bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl rounded-xl p-2 flex items-center gap-2">
@@ -132,7 +132,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="relative border-l border-white/20 pl-2">
                    <select className="w-full appearance-none bg-transparent border-0 rounded-md py-3 pl-3 pr-10 text-slate-900 dark:text-white focus:outline-none focus:ring-0" value={selectedCountry} onChange={handleCountryChange}>
-                    <option value="all" className="text-black">All Africa</option>
+                    <option value="all" className="text-black">All Nigeria</option>
                     {Object.keys(LOCATIONS).sort().map(country => <option key={country} value={country} className="text-black">{country}</option>)}
                   </select>
                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-slate-300"><ChevronDownIcon className="h-4 w-4" /></span>

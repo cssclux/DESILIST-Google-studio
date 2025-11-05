@@ -15,6 +15,9 @@ export interface Location {
   country: string;
   state: string;
   city: string;
+  address?: string;
+  lat: number;
+  lng: number;
 }
 
 export interface Listing {

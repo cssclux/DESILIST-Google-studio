@@ -13,7 +13,7 @@ export const Header: React.FC<HeaderProps> = ({ onPostAdClick, theme, onToggleTh
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <a href="#" className="text-2xl font-bold text-white">AfriList</a>
+            <a href="#" className="text-2xl font-bold text-white">OJA.ng</a>
           </div>
           <div className="hidden md:flex items-center space-x-6">
             <a href="#" className="text-slate-200 hover:text-white font-medium">All Ads</a>

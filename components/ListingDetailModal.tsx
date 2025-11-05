@@ -3,7 +3,7 @@ import type { Listing } from '../types';
 import { 
     XMarkIcon, MapPinIcon, PaperAirplaneIcon, CheckCircleIcon, 
     UserCircleIcon, CalendarDaysIcon, FlagIcon, StarIcon,
-    ShieldCheckIcon, TruckIcon, AtSymbolIcon, UsersIcon, BanknotesIcon, CubeTransparentIcon, ArchiveBoxIcon
+    ShieldCheckIcon, TruckIcon, AtSymbolIcon, UsersIcon, BanknotesIcon, CubeTransparentIcon, ArchiveBoxIcon, MapIcon
 } from './icons/Icons';
 
 interface ListingDetailModalProps {
@@ -159,7 +159,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
             
             <div className="text-sm text-slate-500 dark:text-slate-400 mb-4 flex items-center">
               <MapPinIcon className="h-4 w-4 mr-1.5 flex-shrink-0" />
-              <span className="truncate" title={formattedLocation}>{formattedLocation}</span>
+              <span className="truncate" title={formattedLocation}>{listing.location.address || formattedLocation}</span>
             </div>
             
             <div className="border-t border-b border-slate-300 dark:border-white/10 py-4 mb-4">
@@ -171,6 +171,23 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
               <DeliveryStatusTracker status={listing.deliveryStatus} />
             )}
             
+            <div className="border-t border-slate-300 dark:border-white/10 pt-4 mb-4">
+                <div className="flex items-center mb-3">
+                    <MapIcon className="h-5 w-5 mr-2 text-slate-600 dark:text-slate-300"/>
+                    <h3 className="font-bold text-slate-900 dark:text-white">Location</h3>
+                </div>
+                <div className="w-full h-48 rounded-lg overflow-hidden border border-slate-300 dark:border-white/10">
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        allowFullScreen
+                        src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${listing.location.lat},${listing.location.lng}&zoom=14`}>
+                    </iframe>
+                </div>
+            </div>
+
              <div className="bg-slate-100 dark:bg-white/5 p-4 rounded-lg mb-4">
                 <h3 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">Seller Information</h3>
                 <div className="flex items-start text-sm">

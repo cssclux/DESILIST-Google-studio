@@ -61,8 +61,8 @@ export const suggestPrice = async (title: string, description: string): Promise<
     throw new Error("AI functionality is disabled. Please set your API key.");
   }
 
-  const prompt = `Based on the ad title "${title}" and description "${description}", suggest a realistic price for this item or service. The ad is for the African market (e.g., Nigeria, Kenya, South Africa, etc.), so use appropriate currency symbols if possible (e.g., ₦ for Nigeria, KES for Kenya, R for South Africa, $ for international listings).
-- For items, provide a clear price or a narrow price range (e.g., '₦50,000' or 'R7,000 - R7,500').
+  const prompt = `Based on the ad title "${title}" and description "${description}", suggest a realistic price for this item or service for the Nigerian market. The primary currency is the Nigerian Naira (₦).
+- For items, provide a clear price or a narrow price range in Naira (e.g., '₦50,000' or '₦70,000 - ₦75,000').
 - For jobs, suggest a term like 'Competitive Salary'.
 - For services where price varies, suggest 'Request a Quote'.
 Return only the suggested price string, with no extra explanation.`;
