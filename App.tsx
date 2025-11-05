@@ -5,8 +5,9 @@ import { PostAdModal } from './components/PostAdModal';
 import { Footer } from './components/Footer';
 import { MOCK_LISTINGS, CATEGORIES, LOCATIONS } from './constants';
 import type { Listing } from './types';
-import { SearchIcon, ChevronDownIcon, XCircleIcon, CheckCircleIcon } from './components/icons/Icons';
+import { SearchIcon, ChevronDownIcon, XCircleIcon, CheckCircleIcon, UsersIcon, BuildingOffice2Icon, BriefcaseIcon, TagIcon, WrenchScrewdriverIcon, LightBulbIcon, MagnifyingGlassCircleIcon } from './components/icons/Icons';
 import { ListingDetailModal } from './components/ListingDetailModal';
+
 
 const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,6 +28,15 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  const categoryIcons: { [key: string]: React.FC<React.SVGProps<SVGSVGElement>> } = {
+    community: UsersIcon,
+    housing: BuildingOffice2Icon,
+    jobs: BriefcaseIcon,
+    'for-sale': TagIcon,
+    services: WrenchScrewdriverIcon,
+    gigs: LightBulbIcon,
+  };
 
   const handlePostAd = (newListing: Omit<Listing, 'id'>) => {
     const listingWithId: Listing = {
@@ -66,6 +76,12 @@ const App: React.FC = () => {
       ? (LOCATIONS[selectedCountry]?.[selectedState] || []).sort() 
       : [];
   }, [selectedCountry, selectedState]);
+  
+  const featuredListings = useMemo(() => 
+    listings.filter(listing => listing.isFeatured)
+            .sort((a, b) => new Date(b.postDate).getTime() - new Date(a.postDate).getTime()), 
+    [listings]
+  );
   
   const filteredListings = useMemo(() => {
     const mainCategory = CATEGORIES.find(c => c.id === selectedCategory);
@@ -148,32 +164,37 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <div className="mb-8 p-4 bg-white/60 rounded-lg">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-x-4 gap-y-6">
-            {CATEGORIES.map(category => (
-              <div key={category.id}>
-                 <button 
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Browse Categories</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
+            {CATEGORIES.map(category => {
+              const Icon = categoryIcons[category.id];
+              const isSelected = selectedCategory === category.id;
+              return (
+                 <button
+                  key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`font-bold text-left w-full mb-2 ${selectedCategory === category.id ? 'text-primary' : 'text-gray-800 hover:text-primary'}`}
+                  className={`p-4 rounded-lg flex flex-col items-center justify-center space-y-2 transition-all duration-200 ${isSelected ? 'bg-primary text-white shadow-lg scale-105' : 'bg-white hover:shadow-md hover:-translate-y-1'}`}
                 >
-                  {category.name}
+                  {Icon && <Icon className="h-8 w-8" />}
+                  <span className="font-bold">{category.name}</span>
                 </button>
-                <ul className="space-y-1">
-                  {category.subcategories.map(sub => (
-                    <li key={sub.id}>
-                      <button
-                        onClick={() => setSelectedCategory(sub.id)}
-                        className={`text-sm text-left w-full ${selectedCategory === sub.id ? 'font-bold text-primary' : 'text-blue-600 hover:underline'}`}
-                      >
-                        {sub.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <div className="text-center mt-6 pt-4 border-t border-gray-200">
+           {selectedCategory !== 'all' && CATEGORIES.find(c => c.id === selectedCategory) && (
+              <div className="mt-6 p-4 bg-teal-50 rounded-lg">
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                  <span className="font-semibold text-gray-700">Subcategories:</span>
+                  {CATEGORIES.find(c => c.id === selectedCategory)?.subcategories.map(sub => (
+                    <button key={sub.id} onClick={() => setSelectedCategory(sub.id)} className={`text-sm px-3 py-1 rounded-full ${selectedCategory === sub.id ? 'bg-primary text-white font-bold' : 'bg-white text-blue-600 hover:bg-gray-100'}`}>
+                      {sub.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+           )}
+           <div className="text-center mt-6">
              <button
                 onClick={() => setSelectedCategory('all')}
                 className={`text-sm font-semibold ${selectedCategory === 'all' ? 'text-primary font-bold' : 'text-gray-600 hover:text-primary'}`}
@@ -183,6 +204,21 @@ const App: React.FC = () => {
           </div>
         </div>
         
+        {featuredListings.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-4">Featured Listings</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {featuredListings.map(listing => (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing} 
+                  onViewDetails={() => setViewingListing(listing)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
           <div className="flex justify-between items-center mb-4">
              <h2 className="text-2xl font-bold">Recent Listings</h2>
@@ -203,7 +239,17 @@ const App: React.FC = () => {
                 />
               ))
             ) : (
-              <p className="text-gray-500 col-span-full text-center py-10">No listings match your criteria.</p>
+              <div className="col-span-full text-center py-20 bg-white rounded-lg shadow">
+                  <MagnifyingGlassCircleIcon className="h-16 w-16 mx-auto text-gray-300" />
+                  <h3 className="mt-2 text-lg font-medium text-gray-900">No Listings Found</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    There are no listings that match your current filters. Try clearing them to see more.
+                  </p>
+                  <button onClick={handleClearFilters} className="mt-6 bg-primary text-white font-semibold rounded-md hover:bg-primary-dark transition-colors flex items-center justify-center text-sm px-4 py-2 mx-auto">
+                      <XCircleIcon className="h-4 w-4 mr-1.5" />
+                      Clear All Filters
+                  </button>
+              </div>
             )}
           </div>
         </div>

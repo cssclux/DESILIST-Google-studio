@@ -105,3 +105,54 @@ export const ExclamationCircleIcon: React.FC<IconProps> = (props) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
   </svg>
 );
+
+export const UsersIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962a3.75 3.75 0 015.962 0L14.25 6h-4.5l.625 3.75a3.75 3.75 0 015.962 0zM21 18.72a9.094 9.094 0 00-3.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962a3.75 3.75 0 015.962 0L14.25 6h-4.5l.625 3.75a3.75 3.75 0 015.962 0zM3.75 18.72a9.094 9.094 0 013.741-.479 3 3 0 014.682-2.72m-7.5-2.962a3.75 3.75 0 00-5.962 0L3.75 6h4.5l-.625 3.75a3.75 3.75 0 00-5.962 0z" />
+  </svg>
+);
+
+export const BuildingOffice2Icon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+  </svg>
+);
+
+export const BriefcaseIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.075c0 1.313-.964 2.45-2.25 2.635-1.318.188-2.635.346-3.98.346-1.344 0-2.662-.158-3.979-.346-1.286-.185-2.25-1.322-2.25-2.635v-4.074M15.75 9.75c0 .414-.336.75-.75.75h-3.75a.75.75 0 01-.75-.75V6.75c0-.414.336-.75.75-.75h3.75a.75.75 0 01.75.75v3zm-3.75 0h.008v.008h-.008v-.008z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12.75h2.25m13.5 0H21m-6.75-4.5V6.375c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125v1.875m-6.75-4.5h-1.5a1.125 1.125 0 00-1.125 1.125v1.875m-3 0h.008v.008H6v-.008zm12 0h.008v.008h-.008v-.008z" />
+  </svg>
+);
+
+export const TagIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+  </svg>
+);
+
+export const WrenchScrewdriverIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.52-.634.42-1.59-.24-2.19l-1.313-1.048a1.5 1.5 0 00-2.19.24l-3.03 2.496m0 0l-6.12 6.12A2.652 2.652 0 003 21a2.652 2.652 0 004.25 2.121l6.12-6.12z" />
+  </svg>
+);
+
+export const LightBulbIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a12.06 12.06 0 00-4.5 0m4.5 0a3.007 3.007 0 00-1.5-.189m1.5.189a3.007 3.007 0 01-1.5-.189m-1.5-3.375a3.007 3.007 0 00-1.5-.189m1.5.189a3.007 3.007 0 01-1.5-.189m0 0a6.003 6.003 0 00-3.75 0m3.75 0a6.003 6.003 0 01-3.75 0m7.5 0a6.003 6.003 0 003.75 0m-3.75 0a6.003 6.003 0 013.75 0m-7.5 3.375a3.007 3.007 0 001.5-.189m-1.5.189a3.007 3.007 0 011.5-.189m0 0a1.5 1.5 0 011.5 1.5v5.25m0 0a1.5 1.5 0 01-1.5 1.5h-1.5a1.5 1.5 0 01-1.5-1.5v-5.25m0 0a1.5 1.5 0 011.5-1.5h1.5a1.5 1.5 0 011.5 1.5m0 0a6.01 6.01 0 00-1.5-.189m1.5.189a6.01 6.01 0 011.5-.189m-1.5-3.375a6.01 6.01 0 00-1.5-.189m1.5.189a6.01 6.01 0 01-1.5-.189" />
+  </svg>
+);
+
+export const PhotoIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+  </svg>
+);
+
+export const MagnifyingGlassCircleIcon: React.FC<IconProps> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+  </svg>
+);

@@ -55,3 +55,26 @@ export const suggestCategory = async (title: string, categories: Category[]): Pr
     throw new Error("Failed to suggest a category due to an API error. Please select one manually.");
   }
 };
+
+export const suggestPrice = async (title: string, description: string): Promise<string> => {
+  if (!API_KEY) {
+    throw new Error("AI functionality is disabled. Please set your API key.");
+  }
+
+  const prompt = `Based on the ad title "${title}" and description "${description}", suggest a realistic price for this item or service. The ad is for an African market, so use appropriate currency symbols if possible (e.g., ₦ for Nigeria, Ksh for Kenya, R for South Africa, GH₵ for Ghana, Br for Ethiopia, TSh for Tanzania, DH for Morocco, CFA for West/Central Africa, DZD for Algeria, P for Botswana, FC for DRC).
+- For items, provide a clear price or a narrow price range (e.g., '₦150,000' or 'R 7,000 - R 7,500').
+- For jobs, suggest a term like 'Competitive Salary'.
+- For services where price varies, suggest 'Request a Quote'.
+Return only the suggested price string, with no extra explanation.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ parts: [{ text: prompt }] }],
+    });
+    return response.text.trim();
+  } catch (error) {
+    console.error("Error suggesting price with Gemini API:", error);
+    throw new Error("Failed to suggest a price due to an API error. Please enter one manually.");
+  }
+};

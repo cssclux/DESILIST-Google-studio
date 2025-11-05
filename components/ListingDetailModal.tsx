@@ -41,7 +41,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
     }, 1500);
   };
 
-  const handleReport = () => {
+  const handleReportListing = () => {
     const isConfirmed = window.confirm(
       "Are you sure you want to report this listing as inappropriate or fraudulent?"
     );
@@ -50,6 +50,17 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
       setIsReported(true);
     }
   };
+
+  const handleReportUser = () => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to report the user "${listing.seller.username}" for their activity on the platform?`
+    );
+    if (isConfirmed) {
+      console.log(`User reported: USERNAME=${listing.seller.username}, associated with Listing ID=${listing.id}`);
+      setIsReported(true);
+    }
+  };
+
 
   const formattedLocation = `${listing.location.city}, ${listing.location.state}, ${listing.location.country}`;
 
@@ -62,47 +73,51 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
       aria-labelledby="listing-title"
     >
       <div 
-        className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row" 
+        className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row" 
         onClick={e => e.stopPropagation()}
       >
-        <div className="md:w-1/2">
+        <div className="md:w-[55%]">
           <img src={listing.imageUrl} alt={listing.title} className="w-full h-64 md:h-full object-cover rounded-t-2xl md:rounded-l-2xl md:rounded-t-none" />
         </div>
-        <div className="md:w-1/2 p-6 flex flex-col relative">
+        <div className="md:w-[45%] p-6 flex flex-col relative">
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800" aria-label="Close dialog">
             <XMarkIcon className="h-6 w-6" />
           </button>
-          <h2 id="listing-title" className="text-3xl font-bold text-dark mb-2">{listing.title}</h2>
-          <p className="text-primary font-bold text-2xl mb-4">{listing.price}</p>
           
-           <div className="text-sm text-gray-500 mb-4">
-             Posted {formatDate(listing.postDate)}
-          </div>
-
-          <div className="text-gray-600 mb-4 space-y-2">
-            <div className="flex items-center">
-              <MapPinIcon className="h-5 w-5 mr-2 flex-shrink-0" />
-              <span>{formattedLocation}</span>
+          <div className="flex-grow flex flex-col">
+            <h2 id="listing-title" className="text-3xl font-bold text-dark mb-2">{listing.title}</h2>
+            <p className="text-primary font-bold text-2xl mb-4">{listing.price}</p>
+            
+            <div className="text-sm text-gray-500 mb-4 flex items-center">
+              <MapPinIcon className="h-4 w-4 mr-1.5 flex-shrink-0" />
+              <span className="truncate" title={formattedLocation}>{formattedLocation}</span>
             </div>
-            <div className="flex items-center text-sm pt-1">
-                <UserCircleIcon className="h-5 w-5 mr-2 flex-shrink-0 text-gray-500" />
-                <span className="font-semibold text-gray-800">{listing.seller.username}</span>
-                <span className="mx-2 text-gray-400">•</span>
-                <CalendarDaysIcon className="h-5 w-5 mr-1.5 flex-shrink-0 text-gray-500" />
-                <span>{listing.seller.joinDate}</span>
+            
+            <div className="border-t border-b border-gray-200 py-4 mb-4">
+              <h3 className="font-bold text-dark mb-2">Description</h3>
+              <p className="text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">{listing.description}</p>
             </div>
-          </div>
-          
-          <div className="flex-grow overflow-y-auto mb-6 pr-4">
-            <h3 className="font-bold text-dark mb-2">Description</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
+            
+             <div className="bg-slate-50 p-4 rounded-lg mb-4">
+                <h3 className="font-semibold text-gray-800 mb-2">Seller Information</h3>
+                <div className="flex items-center text-sm">
+                    <UserCircleIcon className="h-8 w-8 mr-3 flex-shrink-0 text-gray-500" />
+                    <div>
+                        <span className="font-bold text-gray-900">{listing.seller.username}</span>
+                        <div className="text-gray-500 flex items-center text-xs mt-0.5">
+                            <CalendarDaysIcon className="h-4 w-4 mr-1 flex-shrink-0" />
+                            <span>{listing.seller.joinDate}</span>
+                        </div>
+                    </div>
+                </div>
+             </div>
           </div>
           
           <div className="mt-auto">
             {isSent ? (
               <div className="bg-teal-50 text-teal-800 p-4 rounded-lg flex items-center justify-center border border-teal-200">
                 <CheckCircleIcon className="h-6 w-6 mr-3"/>
-                <span className="font-semibold">Message Sent! The seller will get back to you soon.</span>
+                <span className="font-semibold">Message Sent!</span>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
@@ -128,16 +143,26 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
             )}
              <div className="text-center mt-4">
               {isReported ? (
-                 <p className="text-sm text-gray-500 py-2">Thank you, this listing has been reported.</p>
+                 <p className="text-sm text-gray-500 py-2">Thank you, your report has been submitted.</p>
               ) : (
-                <button 
-                  onClick={handleReport}
-                  className="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center justify-center w-full p-2 rounded-md hover:bg-red-50"
-                  aria-label="Report this listing"
-                >
-                  <FlagIcon className="h-4 w-4 mr-1.5" />
-                  Report this listing
-                </button>
+                <div className="flex items-center justify-center space-x-4">
+                  <button 
+                    onClick={handleReportListing}
+                    className="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center p-2 rounded-md hover:bg-red-50"
+                    aria-label="Report this listing"
+                  >
+                    <FlagIcon className="h-4 w-4 mr-1.5" />
+                    Report Listing
+                  </button>
+                   <button 
+                    onClick={handleReportUser}
+                    className="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center p-2 rounded-md hover:bg-red-50"
+                    aria-label={`Report user ${listing.seller.username}`}
+                  >
+                    <FlagIcon className="h-4 w-4 mr-1.5" />
+                    Report User
+                  </button>
+                </div>
               )}
             </div>
           </div>
