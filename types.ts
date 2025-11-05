@@ -31,5 +31,11 @@ export interface Listing {
   seller: {
     username: string;
     joinDate: string;
+    rating: number;
+    reviewCount: number;
   };
+  deliveryMethods: ('courier' | 'in-person' | 'email')[];
+  paymentMethods: ('crypto' | 'bank-transfer' | 'other')[];
+  acceptsEscrow: boolean;
+  deliveryStatus?: 'processing' | 'shipped' | 'out-for-delivery' | 'delivered';
 }
