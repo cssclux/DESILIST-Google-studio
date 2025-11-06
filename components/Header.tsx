@@ -1,43 +1,58 @@
 import React from 'react';
-import { GlobeAltIcon, UserCircleIcon, PlusIcon, SunIcon, MoonIcon } from './icons/Icons';
+import { Link } from 'react-router-dom';
+import type { User } from '../types';
+import { ArrowLeftOnRectangleIcon } from './icons/Icons';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
+  currentUser: User | null;
   onPostAdClick: () => void;
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
+  onLoginClick: () => void;
+  onLogout: () => void;
+  theme: string;
+  onThemeToggle: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onPostAdClick, theme, onToggleTheme }) => {
+export const Header: React.FC<HeaderProps> = ({ currentUser, onPostAdClick, onLoginClick, onLogout, theme, onThemeToggle }) => {
   return (
-    <header className="bg-primary shadow-md sticky top-0 z-20">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <a href="#" className="text-2xl font-bold text-white">OJA.ng</a>
-          </div>
-          <div className="hidden md:flex items-center space-x-6">
-            <a href="#" className="text-slate-200 hover:text-white font-medium">All Ads</a>
-            <a href="#" className="text-slate-200 hover:text-white font-medium">Categories</a>
-            <a href="#" className="text-slate-200 hover:text-white font-medium">Help</a>
-          </div>
+    <header className="bg-primary sticky top-0 z-40 border-b border-primary-dark/50 shadow-lg">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-20">
+          <Link to="/" className="text-3xl font-bold text-white">
+            OJA<span className="font-light opacity-80">.ng</span>
+          </Link>
           <div className="flex items-center space-x-4">
-             <button onClick={onToggleTheme} className="text-white hover:bg-black/10 p-2 rounded-full transition-colors duration-200">
-              {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
-            </button>
-            <button className="hidden md:flex items-center text-slate-200 hover:text-white">
-              <GlobeAltIcon className="h-5 w-5 mr-1" />
-              <span>EN</span>
-            </button>
-            <button className="flex items-center text-slate-200 hover:text-white">
-              <UserCircleIcon className="h-7 w-7" />
-              <span className="hidden md:inline ml-1 font-medium">Login / Register</span>
-            </button>
-            <button 
+            <ThemeToggle theme={theme} onToggle={onThemeToggle} />
+            {currentUser ? (
+               <div className="flex items-center space-x-3">
+                 <Link to={`/profile/${currentUser.email}`} className="flex items-center space-x-3 group">
+                   <span className="hidden md:inline text-slate-100 font-medium group-hover:text-white transition-colors">
+                     Welcome, {currentUser.name.split(' ')[0]}!
+                   </span>
+                   <img src={currentUser.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser.email}`} alt={currentUser.name} className="h-9 w-9 rounded-full border-2 border-white/20 group-hover:border-white transition-colors" />
+                 </Link>
+                 <button
+                   onClick={onLogout}
+                   className="text-slate-200 hover:text-white transition-colors"
+                   title="Log Out"
+                 >
+                   <ArrowLeftOnRectangleIcon className="h-6 w-6" />
+                 </button>
+               </div>
+            ) : (
+                <button
+                onClick={onLoginClick}
+                className="hidden md:inline-block text-slate-100 hover:text-white transition-colors font-semibold"
+              >
+                Log In / Register
+              </button>
+            )}
+
+            <button
               onClick={onPostAdClick}
-              className="flex items-center bg-secondary text-gray-900 font-bold py-2 px-4 rounded-md hover:bg-yellow-300 transition-all duration-300 shadow-md hover:shadow-[0_0_15px_rgba(250,204,21,0.6)]"
+              className="bg-white text-primary hover:bg-slate-200 font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-px glow-on-hover"
             >
-              <PlusIcon className="h-5 w-5 mr-1" />
-              <span>Post Ad</span>
+              Post Ad
             </button>
           </div>
         </div>

@@ -1,255 +1,304 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Header } from './components/Header';
-import { ListingCard } from './components/ListingCard';
-import { PostAdModal } from './components/PostAdModal';
-import { Footer } from './components/Footer';
-import { MOCK_LISTINGS, CATEGORIES, LOCATIONS } from './constants';
-import type { Listing } from './types';
-import { SearchIcon, ChevronDownIcon, CheckCircleIcon, UsersIcon, BuildingOffice2Icon, BriefcaseIcon, TagIcon, WrenchScrewdriverIcon, LightBulbIcon, MagnifyingGlassCircleIcon } from './components/icons/Icons';
-import { ListingDetailModal } from './components/ListingDetailModal';
 
+import React, { useState, useMemo, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
+import { PostAdModal } from './components/PostAdModal';
+import { ListingDetailModal } from './components/ListingDetailModal';
+import { LoginModal } from './components/LoginModal';
+import { ContactSellerModal } from './components/ContactSellerModal';
+import { HomePage } from './components/HomePage';
+import { ProfilePage } from './components/ProfilePage';
+import type { Listing, User, Review, SavedSearch } from './types';
+import { CATEGORIES, NIGERIAN_LOCATIONS } from './constants';
+
+// --- MOCK DATABASE ---
+
+const initialUsers: User[] = [
+  { name: 'Tunde Ojo', email: 'tunde@example.com', phone: '08012345678', joinDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
+  { name: 'Mrs. Adebayo', email: 'adebayo.props@example.com', phone: '09087654321', joinDate: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
+  { name: 'HR at TechCorp', email: 'hr@techcorp.ng', phone: '07011223344', joinDate: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
+  { name: 'CleanSweep Nig.', email: 'info@cleansweep.ng', phone: '08122334455', joinDate: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
+];
+
+const initialListings: Listing[] = [
+  {
+    id: '1', title: 'Slightly Used 2021 MacBook Pro 14" M1 Pro', description: 'Selling my barely used 14-inch MacBook Pro with the powerful M1 Pro chip. It has 16GB of RAM and a 512GB SSD. Perfect condition, comes with original box and charger. No scratches or dents. Battery health is at 98%. Great for developers, video editors, and power users.', price: '₦950,000', category: 'for-sale-electronics', location: { city: 'Ikeja', state: 'Lagos', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/1/400/300', postDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true, seller: initialUsers[0]
+  },
+  {
+    id: '2', title: 'Executive 3-Bedroom Flat for Rent in Lekki Phase 1', description: 'A spacious and well-finished 3-bedroom apartment is available for rent in a serene and secure estate in Lekki Phase 1. All rooms are en-suite, with a large living room, fitted kitchen, and ample parking space. 24/7 power and security.', price: '₦7,000,000/year', category: 'housing-apartments', location: { city: 'Lekki', state: 'Lagos', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/2/400/300', postDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: false, seller: initialUsers[1]
+  },
+  {
+    id: '3', title: 'Senior Frontend Developer (React) - Remote', description: 'We are looking for an experienced Senior Frontend Developer proficient in React, TypeScript, and Next.js to join our remote team. You will be responsible for building and maintaining our user-facing applications and collaborating with our product and design teams. 5+ years of experience required.', price: 'Competitive Salary', category: 'jobs-software', location: { city: 'Abuja Municipal Area Council', state: 'FCT', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/3/400/300', postDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true, seller: initialUsers[2]
+  },
+  {
+    id: '4', title: 'Professional Cleaning Services for Homes and Offices', description: 'Get your space sparkling clean with our professional cleaning services. We offer regular cleaning, deep cleaning, and post-construction cleaning for both residential and commercial properties in Abuja. Reliable and affordable. Call us for a free quote.', price: 'Request a Quote', category: 'services-household', location: { city: 'Wuse', state: 'FCT', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/4/400/300', postDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: false, seller: initialUsers[3]
+  },
+  {
+    id: '5', title: '2015 Toyota Camry - Tokunbo', description: 'Very clean, foreign-used 2015 Toyota Camry. Accident-free, duty fully paid. Engine and gear are in perfect condition. AC is chilling. Just buy and drive.', price: '₦8,500,000', category: 'for-sale-cars-trucks', location: { city: 'Ikeja', state: 'Lagos', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/5/400/300', postDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: false, seller: initialUsers[0]
+  },
+];
+
+initialUsers[1].reviews = [
+    { id: 'rev1', author: initialUsers[0], rating: 5, comment: "The apartment was exactly as described. Mrs. Adebayo was a pleasure to deal with. Highly recommended!", date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
+];
 
 const App: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [listings, setListings] = useState<Listing[]>(MOCK_LISTINGS);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [allUsers, setAllUsers] = useState<User[]>(initialUsers);
+  const [allListings, setAllListings] = useState<Listing[]>(initialListings);
   
-  const [selectedCountry, setSelectedCountry] = useState('all');
-  const [selectedState, setSelectedState] = useState('all');
-  const [selectedCity, setSelectedCity] = useState('all');
+  const [isPostAdModalOpen, setIsPostAdModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [contactListing, setContactListing] = useState<Listing | null>(null);
+  const [actionAfterLogin, setActionAfterLogin] = useState<(() => void) | null>(null);
 
-  const [viewingListing, setViewingListing] = useState<Listing | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string>('');
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    // Also respect user's OS preference
+    const userPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return savedTheme || (userPrefersDark ? 'dark' : 'light');
+  });
 
   useEffect(() => {
+    const root = window.document.documentElement;
     if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
     }
+    localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  const handleThemeToggle = () => {
+    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
   };
 
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(''), 5000);
-      return () => clearTimeout(timer);
+  const handlePostAdClick = () => {
+    if (currentUser) {
+      setIsPostAdModalOpen(true);
+    } else {
+      setActionAfterLogin(() => () => setIsPostAdModalOpen(true));
+      setIsLoginModalOpen(true);
     }
-  }, [successMessage]);
-
-  const categoryIcons: { [key: string]: React.FC<React.SVGProps<SVGSVGElement>> } = {
-    community: UsersIcon,
-    housing: BuildingOffice2Icon,
-    jobs: BriefcaseIcon,
-    'for-sale': TagIcon,
-    services: WrenchScrewdriverIcon,
-    gigs: LightBulbIcon,
+  };
+  
+  const handleViewDetails = (listing: Listing) => {
+    setSelectedListing(listing);
   };
 
-  const handlePostAd = (newListing: Omit<Listing, 'id' | 'seller'>) => {
-    const listingWithId: Listing = {
-      ...newListing,
-      id: Date.now(),
-      seller: {
-        username: 'Just You',
-        joinDate: `Joined ${new Date().toLocaleString('default', { month: 'short' })} ${new Date().getFullYear()}`,
-        rating: 0,
-        reviewCount: 0,
+  const handleContactSeller = () => {
+    if (selectedListing) {
+      if(currentUser) {
+        setContactListing(selectedListing);
+        setSelectedListing(null); // Close detail modal when opening contact modal
+      } else {
+        setActionAfterLogin(() => () => {
+           setContactListing(selectedListing);
+           setSelectedListing(null);
+        });
+        setIsLoginModalOpen(true);
       }
+    }
+  };
+
+  const handleLoginSuccess = (user: User) => {
+    let userFromDb = allUsers.find(u => u.email === user.email);
+
+    // If user doesn't exist in our mock DB, add them.
+    if (!userFromDb) {
+      const newUser: User = { 
+        ...user, 
+        reviews: user.reviews || [], 
+        savedSearches: user.savedSearches || [] 
+      };
+      setAllUsers(prev => [...prev, newUser]);
+      userFromDb = newUser;
+    }
+    
+    setCurrentUser(userFromDb); // Set the user from our state, which has all properties.
+    setIsLoginModalOpen(false);
+    if (actionAfterLogin) {
+      actionAfterLogin();
+      setActionAfterLogin(null);
+    }
+  };
+  
+  const handleLogout = () => {
+    setCurrentUser(null);
+  };
+
+  const handlePostAd = (newListingData: Omit<Listing, 'id' | 'postDate' | 'isFeatured' | 'seller'>) => {
+    if (!currentUser) return;
+    
+    const newListing: Listing = {
+      ...newListingData,
+      id: (allListings.length + 1).toString(),
+      postDate: new Date().toISOString(),
+      isFeatured: false,
+      seller: currentUser,
     };
-    setListings([listingWithId, ...listings]);
-    setIsModalOpen(false);
-    setSuccessMessage('Your ad has been posted successfully!');
+    setAllListings([newListing, ...allListings]);
+    setIsPostAdModalOpen(false);
   };
 
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCountry(e.target.value);
-    setSelectedState('all');
-    setSelectedCity('all');
+  const handleAddReview = (targetUserEmail: string, reviewData: Omit<Review, 'id' | 'date' | 'author'>) => {
+    if (!currentUser) {
+        alert("You must be logged in to leave a review.");
+        return;
+    }
+
+    setAllUsers(prevUsers => {
+        return prevUsers.map(user => {
+            if (user.email === targetUserEmail) {
+                const newReview: Review = {
+                    ...reviewData,
+                    id: `rev${Date.now()}`,
+                    date: new Date().toISOString(),
+                    author: currentUser,
+                };
+                return {
+                    ...user,
+                    reviews: [newReview, ...(user.reviews || [])]
+                };
+            }
+            return user;
+        });
+    });
   };
-  
-  const featuredListings = useMemo(() => 
-    listings.filter(listing => listing.isFeatured)
-            .sort((a, b) => new Date(b.postDate).getTime() - new Date(a.postDate).getTime()), 
-    [listings]
-  );
-  
-  const filteredListings = useMemo(() => {
-    const mainCategory = CATEGORIES.find(c => c.id === selectedCategory);
-    const subcategoryIds = mainCategory ? mainCategory.subcategories.map(sc => sc.id) : [];
 
-    return listings
-      .sort((a, b) => new Date(b.postDate).getTime() - new Date(a.postDate).getTime())
-      .filter(listing => {
-        const categoryMatch = selectedCategory === 'all' || 
-          listing.category === selectedCategory ||
-          (mainCategory && subcategoryIds.includes(listing.category));
-        
-        const searchMatch = searchTerm === '' ||
-          listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.description.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const countryMatch = selectedCountry === 'all' || listing.location.country === selectedCountry;
-        const stateMatch = selectedState === 'all' || listing.location.state === selectedState;
-        const cityMatch = selectedCity === 'all' || listing.location.city === selectedCity;
+  const handleDeleteListing = (listingId: string) => {
+    if (window.confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+      setAllListings(prevListings => prevListings.filter(listing => listing.id !== listingId));
+    }
+  };
 
-        return categoryMatch && searchMatch && countryMatch && stateMatch && cityMatch;
-      });
-  }, [listings, selectedCategory, searchTerm, selectedCountry, selectedState, selectedCity]);
+  const handleSaveSearch = (criteria: Omit<SavedSearch, 'id' | 'name'>) => {
+    if (!currentUser) {
+      setActionAfterLogin(() => () => handleSaveSearch(criteria));
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    const searchName = window.prompt("Enter a name for this search:", "My Saved Search");
+    if (!searchName) return;
+
+    const newSearch: SavedSearch = {
+      ...criteria,
+      id: `search_${Date.now()}`,
+      name: searchName,
+    };
+    
+    const updatedUser = {
+      ...currentUser,
+      savedSearches: [...(currentUser.savedSearches || []), newSearch],
+    };
+    setCurrentUser(updatedUser);
+
+    setAllUsers(prevUsers => 
+      prevUsers.map(u => u.email === currentUser.email ? updatedUser : u)
+    );
+    
+    alert(`Search "${searchName}" saved successfully!`);
+  };
+
+  const handleDeleteSearch = (searchId: string) => {
+    if (!currentUser) return;
+    
+    if (window.confirm("Are you sure you want to delete this saved search?")) {
+      const updatedSearches = (currentUser.savedSearches || []).filter(s => s.id !== searchId);
+      
+      const updatedUser = {
+        ...currentUser,
+        savedSearches: updatedSearches,
+      };
+      setCurrentUser(updatedUser);
+
+      setAllUsers(prevUsers => 
+        prevUsers.map(u => u.email === currentUser.email ? updatedUser : u)
+      );
+    }
+  };
+
 
   return (
-    <div className="flex flex-col min-h-screen text-slate-900 dark:text-slate-100">
-      <Header onPostAdClick={() => setIsModalOpen(true)} theme={theme} onToggleTheme={toggleTheme} />
-      
-      <main className="flex-grow">
-        <div 
-          className="relative bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?q=80&w=1920&auto=format&fit=crop')" }}
-        >
-          <div className="absolute inset-0 bg-black/60"></div>
-          <div className="relative z-10 text-center py-20 md:py-24 px-4 container mx-auto">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">Your Market, Your Price - OJA.ng</h1>
-            <p className="text-lg text-slate-200 max-w-2xl mx-auto">Nigeria's trusted online marketplace for everything you need.</p>
-            
-            <div className="mt-8 max-w-3xl mx-auto">
-              <div className="bg-white/50 dark:bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl rounded-xl p-2 flex items-center gap-2">
-                <div className="relative flex-grow">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <SearchIcon className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                  </span>
-                  <input 
-                    type="text" 
-                    placeholder="What are you looking for?"
-                    className="w-full pl-10 pr-4 py-3 border-0 rounded-md focus:ring-0 bg-transparent text-slate-900 dark:text-white placeholder-slate-600 dark:placeholder-slate-300"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="relative border-l border-white/20 pl-2">
-                   <select className="w-full appearance-none bg-transparent border-0 rounded-md py-3 pl-3 pr-10 text-slate-900 dark:text-white focus:outline-none focus:ring-0" value={selectedCountry} onChange={handleCountryChange}>
-                    <option value="all" className="text-black">All Nigeria</option>
-                    {Object.keys(LOCATIONS).sort().map(country => <option key={country} value={country} className="text-black">{country}</option>)}
-                  </select>
-                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-slate-300"><ChevronDownIcon className="h-4 w-4" /></span>
-                </div>
-                <button className="bg-secondary text-gray-900 font-bold py-3 px-6 rounded-lg hover:bg-yellow-300 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(250,204,21,0.5)]">
-                  Search
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="container mx-auto px-4 py-12">
-            <div className="mb-12">
-                <h2 className="text-3xl font-bold mb-6 text-center text-slate-900 dark:text-light">Browse Our Categories</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-                    {CATEGORIES.map(category => {
-                    const Icon = categoryIcons[category.id];
-                    const isSelected = selectedCategory === category.id;
-                    return (
-                        <button
-                        key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
-                        className={`p-4 rounded-xl flex flex-col items-center justify-center space-y-2 transition-all duration-300 border ${isSelected ? 'bg-primary/20 dark:bg-primary/30 backdrop-blur-md scale-105 shadow-lg border-primary/50 dark:border-teal-300/50 text-primary dark:text-white' : 'bg-white dark:bg-white/5 backdrop-blur-md border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 shadow-sm dark:shadow-none'}`}
-                        >
-                        {Icon && <Icon className="h-8 w-8" />}
-                        <span className="font-bold">{category.name}</span>
-                        </button>
-                    );
-                    })}
-                </div>
-                {selectedCategory !== 'all' && CATEGORIES.find(c => c.id === selectedCategory) && (
-                    <div className="mt-6 p-4 bg-teal-500/10 backdrop-blur-md border border-teal-500/20 rounded-lg">
-                        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-                        <span className="font-semibold text-slate-700 dark:text-slate-200">Subcategories:</span>
-                        {CATEGORIES.find(c => c.id === selectedCategory)?.subcategories.map(sub => (
-                            <button key={sub.id} onClick={() => setSelectedCategory(sub.id)} className={`text-sm px-3 py-1 rounded-full transition-colors ${selectedCategory === sub.id ? 'bg-primary text-white font-bold shadow-md' : 'bg-black/5 dark:bg-white/10 text-slate-600 dark:text-slate-200 hover:bg-black/10 dark:hover:bg-white/20'}`}>
-                            {sub.name}
-                            </button>
-                        ))}
-                        </div>
-                    </div>
-                )}
-                <div className="text-center mt-6">
-                    <button
-                        onClick={() => setSelectedCategory('all')}
-                        className={`text-sm font-semibold transition-colors ${selectedCategory === 'all' ? 'text-secondary font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
-                    >
-                        View All Listings
-                    </button>
-                </div>
-            </div>
-            
-            {featuredListings.length > 0 && (
-            <div className="mb-12">
-                <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-light">Featured Ads</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {featuredListings.map(listing => (
-                    <ListingCard 
-                    key={listing.id} 
-                    listing={listing} 
-                    onViewDetails={() => setViewingListing(listing)}
-                    />
-                ))}
-                </div>
-            </div>
-            )}
+    <div className="bg-transparent min-h-screen flex flex-col font-sans">
+      <Header 
+        currentUser={currentUser}
+        onPostAdClick={handlePostAdClick}
+        onLoginClick={() => setIsLoginModalOpen(true)}
+        onLogout={handleLogout}
+        theme={theme}
+        onThemeToggle={handleThemeToggle}
+      />
 
-            <div>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-light">Recent Ads</h2>
-                {successMessage && (
-                    <div className="bg-teal-500/20 backdrop-blur-md border border-teal-400/50 text-teal-100 font-semibold p-3 rounded-lg flex items-center animate-fade-in">
-                        <CheckCircleIcon className="h-5 w-5 mr-2" />
-                        {successMessage}
-                    </div>
-                )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredListings.length > 0 ? (
-                filteredListings.map(listing => (
-                    <ListingCard 
-                    key={listing.id} 
-                    listing={listing} 
-                    onViewDetails={() => setViewingListing(listing)}
-                    />
-                ))
-                ) : (
-                <div className="col-span-full text-center py-20 bg-slate-200 dark:bg-white/5 backdrop-blur-lg rounded-lg shadow-xl">
-                    <MagnifyingGlassCircleIcon className="h-16 w-16 mx-auto text-gray-400 dark:text-gray-500" />
-                    <h3 className="mt-2 text-lg font-medium text-slate-700 dark:text-slate-100">No Listings Found</h3>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        Try adjusting your search or category filters to find what you're looking for.
-                    </p>
-                </div>
-                )}
-            </div>
-            </div>
-        </div>
+      <main className="container mx-auto px-4 py-8 flex-grow">
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <HomePage 
+                listings={allListings}
+                currentUser={currentUser}
+                onViewDetails={handleViewDetails}
+                onDelete={handleDeleteListing}
+                onSaveSearch={handleSaveSearch}
+              />
+            } 
+          />
+          <Route 
+            path="/profile/:userId" 
+            element={
+              <ProfilePage 
+                allUsers={allUsers}
+                allListings={allListings}
+                currentUser={currentUser}
+                onViewDetails={handleViewDetails}
+                onAddReview={handleAddReview}
+                onDelete={handleDeleteListing}
+                onDeleteSearch={handleDeleteSearch}
+              />
+            }
+          />
+        </Routes>
       </main>
+
+      <Footer />
       
-      {isModalOpen && (
-        <PostAdModal 
-          onClose={() => setIsModalOpen(false)} 
-          onSubmit={handlePostAd} 
+      {isPostAdModalOpen && (
+        <PostAdModal
+          isOpen={isPostAdModalOpen}
+          onClose={() => setIsPostAdModalOpen(false)}
+          onPostAd={handlePostAd}
         />
       )}
 
-      {viewingListing && (
+      {selectedListing && (
         <ListingDetailModal 
-          listing={viewingListing}
-          onClose={() => setViewingListing(null)}
+          listing={selectedListing}
+          onClose={() => setSelectedListing(null)}
+          onContactSeller={handleContactSeller}
         />
       )}
-      
-      <Footer />
+
+      {contactListing && (
+        <ContactSellerModal
+          listing={contactListing}
+          onClose={() => setContactListing(null)}
+        />
+      )}
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => {
+          setIsLoginModalOpen(false);
+          setActionAfterLogin(null);
+        }}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </div>
   );
-};
+}
 
 export default App;

@@ -1,16 +1,17 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import type { Category } from '../types';
 
 const API_KEY = process.env.API_KEY;
+let ai: GoogleGenAI | null = null;
 
-if (!API_KEY) {
+if (API_KEY) {
+  ai = new GoogleGenAI({ apiKey: API_KEY });
+} else {
   console.warn("API_KEY environment variable not set. AI features will not work.");
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
-
 export const generateDescription = async (title: string, keywords: string): Promise<string> => {
-  if (!API_KEY) {
+  if (!ai) {
     throw new Error("AI functionality is disabled. Please set your API key.");
   }
 
@@ -19,7 +20,7 @@ export const generateDescription = async (title: string, keywords: string): Prom
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: prompt,
     });
     return response.text.trim();
   } catch (error) {
@@ -29,7 +30,7 @@ export const generateDescription = async (title: string, keywords: string): Prom
 };
 
 export const suggestCategory = async (title: string, categories: Category[]): Promise<string> => {
-  if (!API_KEY || !title) {
+  if (!ai || !title) {
     return '';
   }
 
@@ -40,7 +41,7 @@ export const suggestCategory = async (title: string, categories: Category[]): Pr
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: prompt,
     });
     
     const suggestedId = response.text.trim();
@@ -57,7 +58,7 @@ export const suggestCategory = async (title: string, categories: Category[]): Pr
 };
 
 export const suggestPrice = async (title: string, description: string): Promise<string> => {
-  if (!API_KEY) {
+  if (!ai) {
     throw new Error("AI functionality is disabled. Please set your API key.");
   }
 
@@ -70,11 +71,55 @@ Return only the suggested price string, with no extra explanation.`;
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: prompt,
     });
     return response.text.trim();
   } catch (error) {
     console.error("Error suggesting price with Gemini API:", error);
     throw new Error("Failed to suggest a price due to an API error. Please enter one manually.");
+  }
+};
+
+// FIX: Updated suggestFilters to use responseSchema for reliable JSON output.
+export const suggestFilters = async (query: string, categoryName: string): Promise<string[]> => {
+  if (!ai || (!query && !categoryName)) {
+    return [];
+  }
+
+  const prompt = `You are an intelligent search assistant for a Nigerian classifieds website called OJA.ng.
+Based on the search query "${query}" and the category "${categoryName}", suggest 3 to 5 concise and relevant filter chips to help the user narrow down their search.
+These filters could be about condition (e.g., 'Brand New', 'Slightly Used'), price points relevant to Nigeria (e.g., 'Under ₦100,000'), specific features (e.g., '16GB RAM', 'En-suite'), or type (e.g., 'Remote', 'For Rent').`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING
+          }
+        }
+      }
+    });
+    
+    const responseText = response.text.trim();
+    try {
+      const filters = JSON.parse(responseText);
+      if (Array.isArray(filters) && filters.every(item => typeof item === 'string')) {
+        return filters;
+      }
+      console.warn("Gemini returned a valid JSON but not an array of strings:", responseText);
+      return [];
+    } catch (e) {
+      console.warn("Gemini did not return a valid JSON array for filters:", responseText);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error suggesting filters with Gemini API:", error);
+    // Don't throw, just return empty array to prevent UI crash
+    return [];
   }
 };

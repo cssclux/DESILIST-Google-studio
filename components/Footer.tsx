@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
         </div>
-        <div className="text-center text-slate-300 border-t border-teal-400/50 mt-8 pt-6">
+        <div className="text-center text-slate-300 border-t border-primary-dark/50 mt-8 pt-6">
           <p>&copy; {new Date().getFullYear()} OJA.ng. All rights reserved.</p>
         </div>
       </div>
