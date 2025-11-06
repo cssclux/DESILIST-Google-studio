@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Listing, User } from '../types';
-import { MapPinIcon, CalendarDaysIcon, TrashIcon, CameraIcon } from './icons/Icons';
+import { MapPinIcon, CalendarDaysIcon, TrashIcon, CameraIcon, WhatsAppIcon } from './icons/Icons';
 import { CATEGORIES } from '../constants';
 
 interface ListingCardProps {
@@ -8,7 +8,7 @@ interface ListingCardProps {
   currentUser: User | null;
   onViewDetails: (listing: Listing) => void;
   onDelete: (listingId: string) => void;
-  onMakeOffer: (listing: Listing) => void;
+  onLoginRequired: () => void;
 }
 
 const formatDate = (dateString: string) => {
@@ -48,8 +48,19 @@ const getCategoryDetails = (categoryId: string) => {
     }
 }
 
+const createWhatsAppLink = (phone: string, message: string): string => {
+    let sanitizedPhone = phone.replace(/[^0-9+]/g, '');
+    if (sanitizedPhone.length === 11 && sanitizedPhone.startsWith('0')) {
+        sanitizedPhone = '234' + sanitizedPhone.substring(1);
+    } else if (sanitizedPhone.startsWith('+')) {
+        sanitizedPhone = sanitizedPhone.substring(1);
+    }
+    const encodedMessage = encodeURIComponent(message);
+    return `https://wa.me/${sanitizedPhone}?text=${encodedMessage}`;
+};
 
-export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, onViewDetails, onDelete, onMakeOffer }) => {
+
+export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, onViewDetails, onDelete, onLoginRequired }) => {
   const formattedLocation = `${listing.location.city}, ${listing.location.state}`;
   const categoryDetails = getCategoryDetails(listing.category);
   const isOwner = currentUser && currentUser.email === listing.seller.email;
@@ -60,8 +71,15 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, 
   };
 
   const handleMakeOfferClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent modal from opening
-    onMakeOffer(listing);
+    e.stopPropagation();
+    if (!currentUser) {
+        onLoginRequired();
+        return;
+    }
+    if (!listing.seller.phone) return;
+    const message = `Hi, I'd like to make an offer on your listing: "${listing.title}" on OJA.ng.`;
+    const whatsappUrl = createWhatsAppLink(listing.seller.phone, message);
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -101,11 +119,12 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, 
         
         <p className="text-primary dark:text-primary-dark font-extrabold text-2xl mb-2">{listing.price}</p>
         
-        {currentUser && !isOwner && (
+        {!isOwner && listing.seller.phone && (
           <button 
             onClick={handleMakeOfferClick}
-            className="w-full text-center bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2 px-4 rounded-lg transition-all duration-200 text-sm my-2"
+            className="w-full text-center bg-green-500/10 hover:bg-green-500/20 text-green-600 font-bold py-2 px-4 rounded-lg transition-all duration-200 text-sm my-2 flex items-center justify-center gap-2"
           >
+            <WhatsAppIcon className="h-4 w-4" />
             Make an Offer
           </button>
         )}

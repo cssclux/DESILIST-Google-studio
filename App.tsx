@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
@@ -9,9 +7,7 @@ import { ProfilePage } from './components/ProfilePage';
 import { ListingDetailModal } from './components/ListingDetailModal';
 import { PostAdModal } from './components/PostAdModal';
 import { LoginModal } from './components/LoginModal';
-import { ChatModal } from './components/ChatModal';
-import { OfferModal } from './components/OfferModal';
-import type { Listing, User, Review, SavedSearch, ChatThread, Message } from './types';
+import type { Listing, User, Review, SavedSearch } from './types';
 
 const MOCK_USERS: User[] = [
     { email: 'john.doe@example.com', name: 'John Doe', joinDate: '2023-01-15T10:00:00Z', savedSearches: [], reviews: [], password: 'password123', phone: '+2348012345678' },
@@ -36,11 +32,6 @@ const App: React.FC = () => {
   const [isPostAdModalOpen, setIsPostAdModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [offerListing, setOfferListing] = useState<Listing | null>(null);
-  
-  // Chat state
-  const [chatTarget, setChatTarget] = useState<{ listing: Listing } | null>(null);
-  const [chatThreads, setChatThreads] = useState<ChatThread[]>([]);
   
   const location = useLocation();
 
@@ -194,63 +185,6 @@ const App: React.FC = () => {
     setAllUsers(prevUsers => prevUsers.map(u => u.email === currentUser.email ? updatedUser : u));
   };
 
-  const handleOpenChat = (listing: Listing) => {
-      if (!currentUser) {
-          alert("Please log in to contact the seller.");
-          setIsLoginModalOpen(true);
-      } else if (currentUser.email === listing.seller.email) {
-          alert("You cannot send a message to yourself.");
-      } else {
-          setChatTarget({ listing });
-          setSelectedListing(null); // Close detail modal
-      }
-  };
-
-  const handleSendMessage = (threadId: string, text: string) => {
-    if (!currentUser) return;
-
-    const newMessage: Message = {
-        id: `msg-${Date.now()}`,
-        sender: currentUser,
-        text,
-        timestamp: new Date().toISOString(),
-    };
-    
-    setChatThreads(prevThreads => {
-        const existingThread = prevThreads.find(t => t.id === threadId);
-        if (existingThread) {
-            return prevThreads.map(t => t.id === threadId ? { ...t, messages: [...t.messages, newMessage] } : t);
-        } else if (chatTarget) {
-            const newThread: ChatThread = {
-                id: threadId,
-                listing: chatTarget.listing,
-                buyer: currentUser,
-                seller: chatTarget.listing.seller,
-                messages: [newMessage],
-            };
-            return [...prevThreads, newThread];
-        }
-        return prevThreads;
-    });
-  };
-  
-  const handleMakeOffer = (listing: Listing) => {
-      if (!currentUser) {
-          alert("Please log in to make an offer.");
-          setIsLoginModalOpen(true);
-      } else {
-          setOfferListing(listing);
-          setSelectedListing(null); // Close detail modal if open
-      }
-  };
-
-  const handleSubmitOffer = (offerAmount: string) => {
-      if (offerListing) {
-          alert(`Your offer of ${offerAmount} for "${offerListing.title}" has been sent to the seller.`);
-          setOfferListing(null);
-      }
-  };
-
   const handleReportListing = (listingId: string, reason: string, details: string) => {
     const listingToReport = allListings.find(l => l.id === listingId);
     if (listingToReport) {
@@ -298,7 +232,7 @@ const App: React.FC = () => {
               onViewDetails={setSelectedListing}
               onDelete={handleDeleteListing}
               onSaveSearch={handleSaveSearch}
-              onMakeOffer={handleMakeOffer}
+              onLoginRequired={() => setIsLoginModalOpen(true)}
             />
           } />
           <Route path="/profile/:userId" element={
@@ -310,7 +244,7 @@ const App: React.FC = () => {
               onAddReview={handleAddReview}
               onDelete={handleDeleteListing}
               onDeleteSearch={handleDeleteSearch}
-              onMakeOffer={handleMakeOffer}
+              onLoginRequired={() => setIsLoginModalOpen(true)}
             />
           } />
         </Routes>
@@ -323,8 +257,8 @@ const App: React.FC = () => {
           listing={selectedListing} 
           currentUser={currentUser}
           onClose={() => setSelectedListing(null)}
-          onOpenChat={handleOpenChat}
           onReportListing={handleReportListing}
+          onLoginRequired={() => setIsLoginModalOpen(true)}
         />
       )}
 
@@ -343,24 +277,6 @@ const App: React.FC = () => {
           onEmailLogin={handleEmailLogin}
           onEmailSignUp={handleEmailSignUp}
           onGoogleLogin={handleGoogleLogin}
-        />
-      )}
-      
-      {chatTarget && currentUser && (
-          <ChatModal
-              currentUser={currentUser}
-              listing={chatTarget.listing}
-              chatThreads={chatThreads}
-              onSendMessage={handleSendMessage}
-              onClose={() => setChatTarget(null)}
-          />
-      )}
-      
-      {offerListing && (
-        <OfferModal 
-          listing={offerListing}
-          onClose={() => setOfferListing(null)}
-          onSubmitOffer={handleSubmitOffer}
         />
       )}
     </div>

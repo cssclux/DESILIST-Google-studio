@@ -1,4 +1,3 @@
-
 export interface Location {
   country: string;
   state: string;
@@ -64,17 +63,17 @@ export interface SavedSearch {
     filters: string[];
 }
 
+// FIX: Add Message and ChatThread types for chat functionality.
 export interface Message {
-    id: string;
-    sender: User;
-    text: string;
-    timestamp: string;
+  id: string;
+  sender: User;
+  text: string;
+  timestamp: string;
 }
 
 export interface ChatThread {
-    id: string; // e.g., `${listingId}-${buyerEmail}`
-    listing: Listing;
-    buyer: User;
-    seller: User;
-    messages: Message[];
+  id: string;
+  listing: Listing;
+  participants: User[];
+  messages: Message[];
 }

@@ -14,12 +14,12 @@ interface HomePageProps {
   onViewDetails: (listing: Listing) => void;
   onDelete: (listingId: string) => void;
   onSaveSearch: (criteria: Omit<SavedSearch, 'id' | 'name'>) => void;
-  onMakeOffer: (listing: Listing) => void;
+  onLoginRequired: () => void;
 }
 
 const heroBackgroundImage = 'https://i.ibb.co/Zz7p6vdv/hero.png';
 
-export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onViewDetails, onDelete, onSaveSearch, onMakeOffer }) => {
+export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onViewDetails, onDelete, onSaveSearch, onLoginRequired }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -334,7 +334,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
                 onViewDetails={onViewDetails}
                 currentUser={currentUser}
                 onDelete={onDelete}
-                onMakeOffer={onMakeOffer}
+                onLoginRequired={onLoginRequired}
               />
             ))}
           </div>

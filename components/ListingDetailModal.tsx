@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { Listing, User } from '../types';
-import { XMarkIcon, MapPinIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, VideoCameraIcon } from './icons/Icons';
+import { XMarkIcon, MapPinIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, VideoCameraIcon, WhatsAppIcon, TagIcon } from './icons/Icons';
 
 // --- Start of ReportListingModal component ---
 interface ReportListingModalProps {
@@ -122,16 +122,27 @@ const getYouTubeEmbedUrl = (url: string) => {
     return null;
 };
 
+const createWhatsAppLink = (phone: string, message: string): string => {
+    let sanitizedPhone = phone.replace(/[^0-9+]/g, '');
+    if (sanitizedPhone.length === 11 && sanitizedPhone.startsWith('0')) {
+        sanitizedPhone = '234' + sanitizedPhone.substring(1);
+    } else if (sanitizedPhone.startsWith('+')) {
+        sanitizedPhone = sanitizedPhone.substring(1);
+    }
+    const encodedMessage = encodeURIComponent(message);
+    return `https://wa.me/${sanitizedPhone}?text=${encodedMessage}`;
+};
+
 
 interface ListingDetailModalProps {
   listing: Listing | null;
   currentUser: User | null;
   onClose: () => void;
-  onOpenChat: (listing: Listing) => void;
   onReportListing: (listingId: string, reason: string, details: string) => void;
+  onLoginRequired: () => void;
 }
 
-export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing, currentUser, onClose, onOpenChat, onReportListing }) => {
+export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing, currentUser, onClose, onReportListing, onLoginRequired }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
@@ -159,6 +170,28 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
     setIsReportModalOpen(false);
   };
 
+  const handleWhatsAppChat = () => {
+    if (!currentUser) {
+        onLoginRequired();
+        return;
+    }
+    if (!listing.seller.phone) return;
+    const message = `Hi, I'm interested in your listing: "${listing.title}" on OJA.ng.`;
+    const whatsappUrl = createWhatsAppLink(listing.seller.phone, message);
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleWhatsAppOffer = () => {
+    if (!currentUser) {
+        onLoginRequired();
+        return;
+    }
+    if (!listing.seller.phone) return;
+    const message = `Hi, I'd like to make an offer for your listing: "${listing.title}" on OJA.ng.`;
+    const whatsappUrl = createWhatsAppLink(listing.seller.phone, message);
+    window.open(whatsappUrl, '_blank');
+  };
+
   const formattedDate = new Date(listing.postDate).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -166,6 +199,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
   });
   
   const embedUrl = listing.videoUrl ? getYouTubeEmbedUrl(listing.videoUrl) : null;
+  const isOwner = currentUser?.email === listing.seller.email;
 
   return (
     <>
@@ -251,19 +285,37 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
               </div>
 
               <div className="mt-6 space-y-3">
-                  <button 
-                    onClick={() => onOpenChat(listing)}
-                    disabled={currentUser?.email === listing.seller.email}
-                    className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-full w-full shadow-md hover:shadow-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                      {currentUser?.email === listing.seller.email ? "This is Your Ad" : "Chat with Seller"}
-                  </button>
-                  <button 
-                    onClick={() => setIsReportModalOpen(true)}
-                    className="w-full text-center text-xs text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-500 hover:underline"
-                  >
-                    Report this listing
-                  </button>
+                {isOwner ? (
+                    <p className="text-center p-3 bg-green-500/10 text-green-700 dark:text-green-300 rounded-lg text-sm font-semibold">This is your ad.</p>
+                ) : listing.seller.phone ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button 
+                            onClick={handleWhatsAppChat}
+                            className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1DAE50] text-white font-bold py-3 px-4 rounded-full w-full shadow-md transition-colors duration-200"
+                        >
+                            <WhatsAppIcon className="h-5 w-5" />
+                            <span>Chat on WhatsApp</span>
+                        </button>
+                        <button 
+                            onClick={handleWhatsAppOffer}
+                            className="flex items-center justify-center gap-2 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold py-3 px-4 rounded-full w-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors duration-200"
+                        >
+                            <TagIcon className="h-5 w-5" />
+                            <span>Make an Offer</span>
+                        </button>
+                    </div>
+                ) : (
+                    <div className="text-center p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm text-slate-500 dark:text-slate-400">
+                        Seller has not provided a phone number for contact.
+                    </div>
+                )}
+                
+                <button 
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="w-full text-center text-xs text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-500 hover:underline"
+                >
+                  Report this listing
+                </button>
               </div>
           </div>
         </div>

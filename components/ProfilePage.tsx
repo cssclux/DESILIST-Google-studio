@@ -12,7 +12,7 @@ interface ProfilePageProps {
   onAddReview: (targetUserEmail: string, reviewData: Omit<Review, 'id' | 'date' | 'author'>) => void;
   onDelete: (listingId: string) => void;
   onDeleteSearch: (searchId: string) => void;
-  onMakeOffer: (listing: Listing) => void;
+  onLoginRequired: () => void;
 }
 
 const StarRating: React.FC<{ rating: number, setRating?: (r: number) => void }> = ({ rating, setRating }) => {
@@ -33,7 +33,7 @@ const StarRating: React.FC<{ rating: number, setRating?: (r: number) => void }> 
     );
 };
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings, currentUser, onViewDetails, onAddReview, onDelete, onDeleteSearch, onMakeOffer }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings, currentUser, onViewDetails, onAddReview, onDelete, onDeleteSearch, onLoginRequired }) => {
   const { userId } = useParams<{ userId: string }>();
   type Tab = 'listings' | 'reviews' | 'searches';
   const [activeTab, setActiveTab] = useState<Tab>('listings');
@@ -132,7 +132,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings,
                 <div id="panel-listings" role="tabpanel" aria-labelledby="tab-listings" className={activeTab === 'listings' ? 'animate-fade-in-down-fast' : 'hidden'}>
                     {userListings.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {userListings.map(listing => <ListingCard key={listing.id} listing={listing} currentUser={currentUser} onViewDetails={onViewDetails} onDelete={onDelete} onMakeOffer={onMakeOffer} />)}
+                            {userListings.map(listing => <ListingCard key={listing.id} listing={listing} currentUser={currentUser} onViewDetails={onViewDetails} onDelete={onDelete} onLoginRequired={onLoginRequired} />)}
                         </div>
                     ) : (
                         <p className="text-slate-500 dark:text-slate-400 text-center py-8">This user has no active listings.</p>
