@@ -12,6 +12,7 @@ interface ProfilePageProps {
   onAddReview: (targetUserEmail: string, reviewData: Omit<Review, 'id' | 'date' | 'author'>) => void;
   onDelete: (listingId: string) => void;
   onDeleteSearch: (searchId: string) => void;
+  onMakeOffer: (listing: Listing) => void;
 }
 
 const StarRating: React.FC<{ rating: number, setRating?: (r: number) => void }> = ({ rating, setRating }) => {
@@ -32,7 +33,7 @@ const StarRating: React.FC<{ rating: number, setRating?: (r: number) => void }> 
     );
 };
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings, currentUser, onViewDetails, onAddReview, onDelete, onDeleteSearch }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings, currentUser, onViewDetails, onAddReview, onDelete, onDeleteSearch, onMakeOffer }) => {
   const { userId } = useParams<{ userId: string }>();
   const [activeTab, setActiveTab] = useState<'listings' | 'reviews' | 'searches'>('listings');
   const navigate = useNavigate();
@@ -95,7 +96,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings,
       </div>
       
       <div className="glass-card">
-          <div className="border-b border-white/10 dark:border-slate-700/50">
+          <div className="border-b border-gray-200 dark:border-gray-700">
               <nav className="flex space-x-2 p-2 flex-wrap">
                    <button onClick={() => setActiveTab('listings')} className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'listings' ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10'}`}>
                       Listings ({userListings.length})
@@ -114,7 +115,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings,
               {activeTab === 'listings' && (
                   userListings.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {userListings.map(listing => <ListingCard key={listing.id} listing={listing} currentUser={currentUser} onViewDetails={onViewDetails} onDelete={onDelete} />)}
+                          {userListings.map(listing => <ListingCard key={listing.id} listing={listing} currentUser={currentUser} onViewDetails={onViewDetails} onDelete={onDelete} onMakeOffer={onMakeOffer} />)}
                       </div>
                   ) : (
                       <p className="text-slate-500 dark:text-slate-400 text-center py-8">This user has no active listings.</p>
@@ -129,7 +130,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ allUsers, allListings,
                               <StarRating rating={newReviewRating} setRating={setNewReviewRating} />
                               <textarea value={newReviewComment} onChange={e => setNewReviewComment(e.target.value)} rows={3} placeholder="Share your experience..." className="w-full input" required></textarea>
                               <div className="text-right">
-                                  <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-5 rounded-full shadow-lg transition-transform transform hover:-translate-y-px">Submit Review</button>
+                                  <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-5 rounded-full shadow-md transition-colors">Submit Review</button>
                               </div>
                           </form>
                       )}

@@ -1,5 +1,7 @@
 {
-  "name": "OJA.ng - Nigeria's Online Marketplace",
-  "description": "OJA.ng is Nigeria's leading online marketplace to buy and sell goods, find jobs, housing, and services. Powered by AI for a seamless experience.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "name": "",
+  "description": ""
 }

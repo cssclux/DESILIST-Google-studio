@@ -45,10 +45,10 @@
         background-color: #111827;
       }
       .input {
-        @apply w-full bg-white/50 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200;
+        @apply w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200;
       }
       .input:-webkit-autofill {
-        -webkit-box-shadow: 0 0 0 30px #e2e8f0 inset !important;
+        -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
         -webkit-text-fill-color: #0f172a !important;
       }
       .dark .input:-webkit-autofill {
@@ -75,16 +75,7 @@
         @apply inline-flex items-center gap-2 text-xs font-semibold text-primary dark:text-primary px-3 py-1.5 rounded-full bg-primary/10 dark:bg-primary/10 hover:bg-primary/20 dark:hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-wait;
       }
       .glass-card {
-        @apply bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-xl shadow-lg;
-      }
-      .glass-input {
-        @apply w-full input bg-transparent placeholder:text-slate-200/80 focus:text-slate-100;
-      }
-       .glow-on-hover:hover {
-        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 5px rgba(16, 185, 129, 0.2);
-      }
-      .dark .glow-on-hover:hover {
-        box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), 0 0 5px rgba(16, 185, 129, 0.1);
+        @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-md;
       }
     </style>
   <script type="importmap">

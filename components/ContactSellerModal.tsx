@@ -1,66 +1,81 @@
-import React from 'react';
+
+
+import React, { useState } from 'react';
 import type { Listing } from '../types';
-import { XMarkIcon, MapPinIcon, WhatsAppIcon } from './icons/Icons';
-import { Link } from 'react-router-dom';
+import { XMarkIcon, WhatsAppIcon } from './icons/Icons';
 
 interface ContactSellerModalProps {
   listing: Listing;
   onClose: () => void;
+  onSubmitMessage: (message: string) => void;
 }
 
-export const ContactSellerModal: React.FC<ContactSellerModalProps> = ({ listing, onClose }) => {
-  const formatPhoneNumber = (phone: string): string => {
-    let cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('0')) {
-      cleaned = '234' + cleaned.substring(1);
+export const ContactSellerModal: React.FC<ContactSellerModalProps> = ({ listing, onClose, onSubmitMessage }) => {
+  const [message, setMessage] = useState(`Hi ${listing.seller.name.split(' ')[0]}, is the "${listing.title}" still available?`);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) {
+      alert("Please enter a message.");
+      return;
     }
-    return cleaned;
+    onSubmitMessage(message);
   };
 
-  const phoneNumber = formatPhoneNumber(listing.seller.phone);
-  const message = `Hi, I'm interested in your listing on OJA.ng: "${listing.title}". Is it still available?`;
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-  
+  const handleWhatsAppChat = () => {
+    if (!listing.seller.phone) return;
+    // Sanitize phone number: remove non-digit characters except '+' at the start
+    const phoneNumber = listing.seller.phone.replace(/[^0-9+]/g, '');
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
-      <div className="glass-card w-full max-w-lg relative animate-fade-in-down overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6 border-b border-white/10 dark:border-slate-700/50">
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Contact Seller</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Continue the conversation on WhatsApp</p>
-            <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
-                <XMarkIcon className="h-6 w-6" />
-            </button>
+      <div className="glass-card w-full max-w-lg relative animate-fade-in-down" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Contact Seller</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 truncate">Regarding: {listing.title}</p>
+          <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
+            <XMarkIcon className="h-6 w-6" />
+          </button>
         </div>
 
-        <div className="p-6">
-            <div className="bg-slate-900/10 dark:bg-slate-700/50 p-4 rounded-lg mb-6 flex items-center gap-4">
-                <img src={listing.seller.avatarUrl || `https://i.pravatar.cc/150?u=${listing.seller.email}`} alt={listing.seller.name} className="h-16 w-16 rounded-full border-2 border-primary/50"/>
-                <div>
-                    <h3 className="font-bold text-lg text-slate-700 dark:text-slate-200">
-                        <Link to={`/profile/${listing.seller.email}`} onClick={onClose} className="hover:underline">
-                            {listing.seller.name}
-                        </Link>
-                    </h3>
-                    <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                        <MapPinIcon className="h-4 w-4 mr-1.5" />
-                        <span>{`${listing.location.city}, ${listing.location.state}`}</span>
-                    </div>
-                </div>
-            </div>
+        <form id="contact-seller-form" onSubmit={handleSubmit} className="p-6">
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Your Message</label>
+            <textarea 
+              id="message" 
+              rows={5}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="mt-1 block w-full input" 
+              required 
+            />
+          </div>
+        </form>
 
-            <div className="text-center py-4">
-                <p className="text-slate-600 dark:text-slate-300 mb-4">Click the button below to start a chat with <strong>{listing.seller.name.split(' ')[0]}</strong> directly on WhatsApp.</p>
-                
-                <a 
-                    href={whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={onClose}
-                    className="inline-flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-px"
-                >
-                    <WhatsAppIcon className="h-6 w-6" />
-                    Chat on WhatsApp
-                </a>
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center gap-4">
+            <button type="button" onClick={onClose} className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+              Cancel
+            </button>
+            <div className="flex items-center gap-2">
+                {listing.seller.phone && (
+                    <button 
+                        type="button" 
+                        onClick={handleWhatsAppChat}
+                        className="flex items-center gap-2 bg-[#25D366] hover:bg-[#1DAE50] text-white font-bold py-2 px-4 rounded-full shadow-md transition-colors"
+                    >
+                        <WhatsAppIcon className="h-5 w-5" />
+                        <span className="hidden sm:inline">Chat on WhatsApp</span>
+                        <span className="sm:hidden">WhatsApp</span>
+                    </button>
+                )}
+                <button type="submit" form="contact-seller-form" className="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-6 rounded-full shadow-md hover:shadow-lg transition-colors">
+                    Send Message
+                </button>
             </div>
         </div>
       </div>

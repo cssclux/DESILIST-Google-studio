@@ -14,11 +14,12 @@ interface HomePageProps {
   onViewDetails: (listing: Listing) => void;
   onDelete: (listingId: string) => void;
   onSaveSearch: (criteria: Omit<SavedSearch, 'id' | 'name'>) => void;
+  onMakeOffer: (listing: Listing) => void;
 }
 
-const heroBackgroundImage = 'https://images.unsplash.com/photo-1605850198444-702a3a5d1c98?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+const heroBackgroundImage = 'https://i.ibb.co/Zz7p6vdv/hero.png';
 
-export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onViewDetails, onDelete, onSaveSearch }) => {
+export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onViewDetails, onDelete, onSaveSearch, onMakeOffer }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -183,7 +184,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
               className="absolute inset-0"
               style={{ backgroundImage: `url(${heroBackgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
             />
-          <div className="absolute inset-0 bg-black/60"></div>
+          <div className="absolute inset-0 bg-black/75"></div>
           <div className="relative z-10">
               <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">
                   Nigeria's Online Marketplace
@@ -192,7 +193,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
                   Buy & Sell Anything in Nigeria. Find Cars, Jobs, Real Estate & more.
               </p>
               
-              <div className="max-w-4xl mx-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-2xl">
+              <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
                   <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-3">
                       <div className="relative md:col-span-2">
                           <MagnifyingGlassIcon className="absolute top-1/2 left-4 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -223,7 +224,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
                       </select>
                        <button
                           type="submit"
-                          className="w-full md:col-span-1 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center glow-on-hover"
+                          className="w-full md:col-span-1 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center"
                       >
                           <MagnifyingGlassIcon className="h-5 w-5 md:mr-2" />
                           <span className="hidden md:inline">Search</span>
@@ -294,6 +295,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
               onViewDetails={onViewDetails}
               currentUser={currentUser}
               onDelete={onDelete}
+              onMakeOffer={onMakeOffer}
             />
           ))}
         </div>

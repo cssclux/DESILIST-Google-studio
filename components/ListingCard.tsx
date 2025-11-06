@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Listing, User } from '../types';
-import { MapPinIcon, CalendarDaysIcon, TrashIcon } from './icons/Icons';
+import { MapPinIcon, CalendarDaysIcon, TrashIcon, CameraIcon } from './icons/Icons';
 import { CATEGORIES } from '../constants';
 
 interface ListingCardProps {
@@ -8,6 +8,7 @@ interface ListingCardProps {
   currentUser: User | null;
   onViewDetails: (listing: Listing) => void;
   onDelete: (listingId: string) => void;
+  onMakeOffer: (listing: Listing) => void;
 }
 
 const formatDate = (dateString: string) => {
@@ -48,7 +49,7 @@ const getCategoryDetails = (categoryId: string) => {
 }
 
 
-export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, onViewDetails, onDelete }) => {
+export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, onViewDetails, onDelete, onMakeOffer }) => {
   const formattedLocation = `${listing.location.city}, ${listing.location.state}`;
   const categoryDetails = getCategoryDetails(listing.category);
   const isOwner = currentUser && currentUser.email === listing.seller.email;
@@ -58,10 +59,15 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, 
     onDelete(listing.id);
   };
 
+  const handleMakeOfferClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent modal from opening
+    onMakeOffer(listing);
+  };
+
   return (
     <div 
       onClick={() => onViewDetails(listing)} 
-      className="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col text-left w-full cursor-pointer group border border-transparent dark:border-gray-700 hover:border-primary/50 dark:hover:border-primary glow-on-hover"
+      className="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col text-left w-full cursor-pointer group border border-transparent dark:border-gray-700 hover:border-primary/50 dark:hover:border-primary"
     >
       {isOwner && (
         <button
@@ -74,11 +80,17 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, 
         </button>
       )}
       <div className="relative overflow-hidden">
-        <img src={listing.imageUrl} alt={listing.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-lg"/>
+        <img src={listing.imageUrls[0]} alt={listing.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-lg"/>
         {listing.isFeatured && (
-          <div className="absolute top-2 -right-10 text-center bg-gradient-to-br from-yellow-400 to-amber-500 text-gray-900 font-semibold py-1 w-32 transform rotate-45 z-10 text-sm shadow-md">
+          <div className="absolute top-2 -right-10 text-center bg-yellow-400 text-gray-900 font-semibold py-1 w-32 transform rotate-45 z-10 text-sm shadow-md">
             Featured
           </div>
+        )}
+         {listing.imageUrls.length > 1 && (
+            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-10">
+                <CameraIcon className="h-4 w-4" />
+                <span>{listing.imageUrls.length}</span>
+            </div>
         )}
       </div>
       <div className="p-4 flex flex-col flex-grow">
@@ -87,7 +99,16 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, currentUser, 
         </span>
         <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors duration-200 mb-2 h-14 overflow-hidden">{listing.title}</h3>
         
-        <p className="text-primary dark:text-primary-dark font-extrabold text-2xl mb-4">{listing.price}</p>
+        <p className="text-primary dark:text-primary-dark font-extrabold text-2xl mb-2">{listing.price}</p>
+        
+        {currentUser && !isOwner && (
+          <button 
+            onClick={handleMakeOfferClick}
+            className="w-full text-center bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2 px-4 rounded-lg transition-all duration-200 text-sm my-2"
+          >
+            Make an Offer
+          </button>
+        )}
         
         <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mt-auto pt-2 border-t border-slate-200 dark:border-slate-700">
             <div className="flex items-center truncate">

@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import type { Category } from '../types';
-import { ChevronDownIcon } from './icons/Icons';
+import { 
+    ChevronDownIcon,
+    UserGroupIcon,
+    WrenchScrewdriverIcon,
+    HomeModernIcon,
+    TagIcon,
+    BriefcaseIcon,
+    MusicalNoteIcon
+} from './icons/Icons';
 
 interface CategoryNavProps {
   categories: Category[];
@@ -9,6 +17,19 @@ interface CategoryNavProps {
   selectedMainCategory: string | null;
   selectedSubCategory: string | null;
 }
+
+const getCategoryIcon = (categoryId: string) => {
+    const iconClass = "h-5 w-5 mr-2";
+    switch (categoryId) {
+        case 'community': return <UserGroupIcon className={iconClass} />;
+        case 'services': return <WrenchScrewdriverIcon className={iconClass} />;
+        case 'housing': return <HomeModernIcon className={iconClass} />;
+        case 'for-sale': return <TagIcon className={iconClass} />;
+        case 'jobs': return <BriefcaseIcon className={iconClass} />;
+        case 'gigs': return <MusicalNoteIcon className={iconClass} />;
+        default: return null;
+    }
+};
 
 export const CategoryNav: React.FC<CategoryNavProps> = ({
   categories,
@@ -20,9 +41,11 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
   return (
-    <nav className="mb-8 sticky top-[80px] z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md py-2 border-b border-t border-gray-200 dark:border-gray-700">
+    <nav className="mb-8 sticky top-[80px] z-30 bg-white dark:bg-gray-900 py-2 border-b border-t border-gray-200 dark:border-gray-700">
       <ul className="container mx-auto flex items-center justify-center flex-wrap">
-        {categories.map((category) => (
+        {categories.map((category) => {
+            const Icon = getCategoryIcon(category.id);
+            return (
           <li
             key={category.id}
             className="relative"
@@ -37,6 +60,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
                   : 'border-transparent text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary'
               }`}
             >
+              {Icon}
               {category.name}
               <ChevronDownIcon className="h-4 w-4 ml-1 opacity-70 transition-transform duration-200" />
             </button>
@@ -75,7 +99,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
               </div>
             )}
           </li>
-        ))}
+        )})}
       </ul>
     </nav>
   );

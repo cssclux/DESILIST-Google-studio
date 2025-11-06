@@ -1,304 +1,337 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { PostAdModal } from './components/PostAdModal';
-import { ListingDetailModal } from './components/ListingDetailModal';
-import { LoginModal } from './components/LoginModal';
-import { ContactSellerModal } from './components/ContactSellerModal';
 import { HomePage } from './components/HomePage';
 import { ProfilePage } from './components/ProfilePage';
+import { ListingDetailModal } from './components/ListingDetailModal';
+import { PostAdModal } from './components/PostAdModal';
+import { LoginModal } from './components/LoginModal';
+import { ContactSellerModal } from './components/ContactSellerModal';
+import { OfferModal } from './components/OfferModal';
 import type { Listing, User, Review, SavedSearch } from './types';
-import { CATEGORIES, NIGERIAN_LOCATIONS } from './constants';
 
-// --- MOCK DATABASE ---
-
-const initialUsers: User[] = [
-  { name: 'Tunde Ojo', email: 'tunde@example.com', phone: '08012345678', joinDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
-  { name: 'Mrs. Adebayo', email: 'adebayo.props@example.com', phone: '09087654321', joinDate: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
-  { name: 'HR at TechCorp', email: 'hr@techcorp.ng', phone: '07011223344', joinDate: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
-  { name: 'CleanSweep Nig.', email: 'info@cleansweep.ng', phone: '08122334455', joinDate: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString(), reviews: [], savedSearches: [] },
+const MOCK_USERS: User[] = [
+    { email: 'john.doe@example.com', name: 'John Doe', joinDate: '2023-01-15T10:00:00Z', savedSearches: [], reviews: [], password: 'password123', phone: '+2348012345678' },
+    { email: 'jane.smith@example.com', name: 'Jane Smith', joinDate: '2023-02-20T11:30:00Z', savedSearches: [], reviews: [], phone: '+2348023456789' },
+    { email: 'bayo.adekunle@example.com', name: 'Bayo Adekunle', joinDate: '2023-03-10T09:00:00Z', savedSearches: [], reviews: [], password: 'password123' }
 ];
 
-const initialListings: Listing[] = [
-  {
-    id: '1', title: 'Slightly Used 2021 MacBook Pro 14" M1 Pro', description: 'Selling my barely used 14-inch MacBook Pro with the powerful M1 Pro chip. It has 16GB of RAM and a 512GB SSD. Perfect condition, comes with original box and charger. No scratches or dents. Battery health is at 98%. Great for developers, video editors, and power users.', price: '₦950,000', category: 'for-sale-electronics', location: { city: 'Ikeja', state: 'Lagos', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/1/400/300', postDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true, seller: initialUsers[0]
-  },
-  {
-    id: '2', title: 'Executive 3-Bedroom Flat for Rent in Lekki Phase 1', description: 'A spacious and well-finished 3-bedroom apartment is available for rent in a serene and secure estate in Lekki Phase 1. All rooms are en-suite, with a large living room, fitted kitchen, and ample parking space. 24/7 power and security.', price: '₦7,000,000/year', category: 'housing-apartments', location: { city: 'Lekki', state: 'Lagos', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/2/400/300', postDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: false, seller: initialUsers[1]
-  },
-  {
-    id: '3', title: 'Senior Frontend Developer (React) - Remote', description: 'We are looking for an experienced Senior Frontend Developer proficient in React, TypeScript, and Next.js to join our remote team. You will be responsible for building and maintaining our user-facing applications and collaborating with our product and design teams. 5+ years of experience required.', price: 'Competitive Salary', category: 'jobs-software', location: { city: 'Abuja Municipal Area Council', state: 'FCT', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/3/400/300', postDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true, seller: initialUsers[2]
-  },
-  {
-    id: '4', title: 'Professional Cleaning Services for Homes and Offices', description: 'Get your space sparkling clean with our professional cleaning services. We offer regular cleaning, deep cleaning, and post-construction cleaning for both residential and commercial properties in Abuja. Reliable and affordable. Call us for a free quote.', price: 'Request a Quote', category: 'services-household', location: { city: 'Wuse', state: 'FCT', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/4/400/300', postDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: false, seller: initialUsers[3]
-  },
-  {
-    id: '5', title: '2015 Toyota Camry - Tokunbo', description: 'Very clean, foreign-used 2015 Toyota Camry. Accident-free, duty fully paid. Engine and gear are in perfect condition. AC is chilling. Just buy and drive.', price: '₦8,500,000', category: 'for-sale-cars-trucks', location: { city: 'Ikeja', state: 'Lagos', country: 'Nigeria' }, imageUrl: 'https://picsum.photos/seed/5/400/300', postDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: false, seller: initialUsers[0]
-  },
-];
-
-initialUsers[1].reviews = [
-    { id: 'rev1', author: initialUsers[0], rating: 5, comment: "The apartment was exactly as described. Mrs. Adebayo was a pleasure to deal with. Highly recommended!", date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
+const MOCK_LISTINGS: Listing[] = [
+    { id: '1', title: 'Slightly Used Toyota Camry 2018', description: 'Very clean, accident-free Toyota Camry. Buy and drive.', price: '₦12,500,000', category: 'for-sale-cars-trucks', location: { country: 'Nigeria', state: 'Lagos', city: 'Ikeja' }, imageUrls: ['https://i.ibb.co/6rC6PzT/camry.jpg', 'https://i.ibb.co/gDFs2wL/camry-interior.jpg', 'https://i.ibb.co/xJg3PFr/camry-engine.jpg'], seller: MOCK_USERS[0], postDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true },
+    { id: '2', title: '3 Bedroom Flat for Rent in Lekki Phase 1', description: 'A spacious and well-maintained 3 bedroom flat with all rooms en-suite, fitted kitchen, and ample parking space.', price: '₦5,000,000 / year', category: 'housing-apartments', location: { country: 'Nigeria', state: 'Lagos', city: 'Eti Osa' }, imageUrls: ['https://i.ibb.co/3YYxWbF/apartment.jpg', 'https://i.ibb.co/yqgJm1Q/apartment-living.jpg', 'https://i.ibb.co/B2S05gN/apartment-kitchen.jpg', 'https://i.ibb.co/Xz9d9Yt/apartment-bedroom.jpg'], seller: MOCK_USERS[1], postDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: '3', title: 'Brand New iPhone 14 Pro Max', description: '256GB, Deep Purple, sealed in box. USA spec.', price: '₦950,000', category: 'for-sale-cell-phones', location: { country: 'Nigeria', state: 'FCT', city: 'Abuja Municipal Area Council' }, imageUrls: ['https://i.ibb.co/D8d3smJ/iphone.jpg', 'https://i.ibb.co/7jWqN7r/iphone-back.jpg', 'https://i.ibb.co/vVRSR1G/iphone-box.jpg'], seller: MOCK_USERS[2], postDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: '4', title: 'Senior Frontend Engineer (React)', description: 'We are looking for an experienced Frontend Engineer to join our team. Must be proficient in React, TypeScript, and modern CSS.', price: 'Competitive Salary', category: 'jobs-software', location: { country: 'Nigeria', state: 'Lagos', city: 'Lagos Mainland' }, imageUrls: ['https://i.ibb.co/L9jBwLw/job.jpg', 'https://i.ibb.co/7JdkyzQ/office.jpg', 'https://i.ibb.co/wJMyB4F/code.jpg'], seller: MOCK_USERS[1], postDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: '5', title: 'Quality Leather Sofa Set', description: 'A 7-seater leather sofa, barely used. Very comfortable and stylish. Selling because I am relocating.', price: '₦450,000', category: 'for-sale-furniture', location: { country: 'Nigeria', state: 'Oyo', city: 'Ibadan North' }, imageUrls: ['https://i.ibb.co/Jqj8pCF/sofa.jpg', 'https://i.ibb.co/7kL3R5x/sofa-side.jpg', 'https://i.ibb.co/tLW4MZS/sofa-living-room.jpg'], seller: MOCK_USERS[0], postDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true },
 ];
 
 const App: React.FC = () => {
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [allUsers, setAllUsers] = useState<User[]>(MOCK_USERS);
+  const [allListings, setAllListings] = useState<Listing[]>(MOCK_LISTINGS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [allUsers, setAllUsers] = useState<User[]>(initialUsers);
-  const [allListings, setAllListings] = useState<Listing[]>(initialListings);
-  
+
   const [isPostAdModalOpen, setIsPostAdModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [contactListing, setContactListing] = useState<Listing | null>(null);
-  const [actionAfterLogin, setActionAfterLogin] = useState<(() => void) | null>(null);
-
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    // Also respect user's OS preference
-    const userPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return savedTheme || (userPrefersDark ? 'dark' : 'light');
-  });
+  const [offerListing, setOfferListing] = useState<Listing | null>(null);
+  
+  const location = useLocation();
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    // Persist and apply theme
     if (theme === 'dark') {
-      root.classList.add('dark');
+      document.documentElement.classList.add('dark');
     } else {
-      root.classList.remove('dark');
+      document.documentElement.classList.remove('dark');
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+  
+  // Close modals on route change
+  useEffect(() => {
+    setSelectedListing(null);
+    setIsPostAdModalOpen(false);
+  }, [location]);
 
   const handleThemeToggle = () => {
-    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
   };
 
-  const handlePostAdClick = () => {
-    if (currentUser) {
-      setIsPostAdModalOpen(true);
-    } else {
-      setActionAfterLogin(() => () => setIsPostAdModalOpen(true));
-      setIsLoginModalOpen(true);
+  const handleEmailSignUp = async (details: { name: string; email: string; password: string }) => {
+    const existingUser = allUsers.find(u => u.email === details.email);
+    if (existingUser) {
+        throw new Error("An account with this email already exists.");
     }
+    const newUser: User = {
+        name: details.name,
+        email: details.email,
+        password: details.password,
+        joinDate: new Date().toISOString(),
+        avatarUrl: `https://i.pravatar.cc/150?u=${details.email}`,
+        reviews: [],
+        savedSearches: [],
+    };
+    setAllUsers(prev => [...prev, newUser]);
+    setCurrentUser(newUser);
+    setIsLoginModalOpen(false);
+  };
+
+  const handleEmailLogin = async (credentials: { email: string; password: string }) => {
+    const user = allUsers.find(u => u.email === credentials.email);
+    if (!user || user.password !== credentials.password) {
+        throw new Error("Invalid email or password.");
+    }
+    setCurrentUser(user);
+    setIsLoginModalOpen(false);
   };
   
-  const handleViewDetails = (listing: Listing) => {
-    setSelectedListing(listing);
-  };
-
-  const handleContactSeller = () => {
-    if (selectedListing) {
-      if(currentUser) {
-        setContactListing(selectedListing);
-        setSelectedListing(null); // Close detail modal when opening contact modal
-      } else {
-        setActionAfterLogin(() => () => {
-           setContactListing(selectedListing);
-           setSelectedListing(null);
-        });
-        setIsLoginModalOpen(true);
-      }
-    }
-  };
-
-  const handleLoginSuccess = (user: User) => {
-    let userFromDb = allUsers.find(u => u.email === user.email);
-
-    // If user doesn't exist in our mock DB, add them.
-    if (!userFromDb) {
-      const newUser: User = { 
-        ...user, 
-        reviews: user.reviews || [], 
-        savedSearches: user.savedSearches || [] 
-      };
-      setAllUsers(prev => [...prev, newUser]);
-      userFromDb = newUser;
-    }
-    
-    setCurrentUser(userFromDb); // Set the user from our state, which has all properties.
-    setIsLoginModalOpen(false);
-    if (actionAfterLogin) {
-      actionAfterLogin();
-      setActionAfterLogin(null);
+  const handleGoogleLogin = () => {
+    // Simulate logging in with a pre-existing "Google" account (jane.smith)
+    const googleUser = allUsers.find(u => u.email === 'jane.smith@example.com');
+    if (googleUser) {
+        setCurrentUser(googleUser);
+        setIsLoginModalOpen(false);
+    } else {
+        // Or create it if it doesn't exist
+        const newGoogleUser: User = {
+            name: 'Jane Smith',
+            email: 'jane.smith@example.com',
+            joinDate: new Date().toISOString(),
+            avatarUrl: `https://i.pravatar.cc/150?u=jane.smith@example.com`,
+            reviews: [],
+            savedSearches: [],
+        };
+        setAllUsers(prev => [...prev, newGoogleUser]);
+        setCurrentUser(newGoogleUser);
+        setIsLoginModalOpen(false);
     }
   };
   
   const handleLogout = () => {
     setCurrentUser(null);
   };
-
-  const handlePostAd = (newListingData: Omit<Listing, 'id' | 'postDate' | 'isFeatured' | 'seller'>) => {
-    if (!currentUser) return;
-    
-    const newListing: Listing = {
-      ...newListingData,
-      id: (allListings.length + 1).toString(),
-      postDate: new Date().toISOString(),
-      isFeatured: false,
-      seller: currentUser,
-    };
-    setAllListings([newListing, ...allListings]);
-    setIsPostAdModalOpen(false);
-  };
-
-  const handleAddReview = (targetUserEmail: string, reviewData: Omit<Review, 'id' | 'date' | 'author'>) => {
+  
+  const handlePostAd = (newListing: Omit<Listing, 'id' | 'seller' | 'postDate'>) => {
     if (!currentUser) {
-        alert("You must be logged in to leave a review.");
-        return;
+      alert("You must be logged in to post an ad.");
+      setIsLoginModalOpen(true);
+      return;
     }
-
-    setAllUsers(prevUsers => {
-        return prevUsers.map(user => {
-            if (user.email === targetUserEmail) {
-                const newReview: Review = {
-                    ...reviewData,
-                    id: `rev${Date.now()}`,
-                    date: new Date().toISOString(),
-                    author: currentUser,
-                };
-                return {
-                    ...user,
-                    reviews: [newReview, ...(user.reviews || [])]
-                };
-            }
-            return user;
-        });
-    });
+    const fullListing: Listing = {
+      ...newListing,
+      id: `listing-${Date.now()}`,
+      seller: currentUser,
+      postDate: new Date().toISOString(),
+    };
+    setAllListings(prev => [fullListing, ...prev]);
+    setIsPostAdModalOpen(false);
+    alert("Your ad has been posted successfully!");
   };
 
   const handleDeleteListing = (listingId: string) => {
-    if (window.confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
-      setAllListings(prevListings => prevListings.filter(listing => listing.id !== listingId));
+    if (!currentUser) return;
+    if (window.confirm("Are you sure you want to delete this listing?")) {
+        setAllListings(prev => prev.filter(l => l.id !== listingId || l.seller.email !== currentUser.email));
     }
+  };
+  
+  const handleAddReview = (targetUserEmail: string, reviewData: Omit<Review, 'id' | 'date' | 'author'>) => {
+      if (!currentUser) {
+          alert("You need to be logged in to leave a review.");
+          setIsLoginModalOpen(true);
+          return;
+      }
+      setAllUsers(prevUsers => prevUsers.map(user => {
+          if (user.email === targetUserEmail) {
+              const newReview: Review = {
+                  ...reviewData,
+                  id: `review-${Date.now()}`,
+                  date: new Date().toISOString(),
+                  author: currentUser,
+              };
+              return {
+                  ...user,
+                  reviews: [...(user.reviews || []), newReview],
+              };
+          }
+          return user;
+      }));
+      alert("Your review has been submitted!");
   };
 
   const handleSaveSearch = (criteria: Omit<SavedSearch, 'id' | 'name'>) => {
     if (!currentUser) {
-      setActionAfterLogin(() => () => handleSaveSearch(criteria));
-      setIsLoginModalOpen(true);
-      return;
+        alert("Please log in to save your search.");
+        setIsLoginModalOpen(true);
+        return;
     }
-
-    const searchName = window.prompt("Enter a name for this search:", "My Saved Search");
-    if (!searchName) return;
+    const name = prompt("Enter a name for this search:", criteria.searchTerm || "My Search");
+    if (!name) return;
 
     const newSearch: SavedSearch = {
       ...criteria,
-      id: `search_${Date.now()}`,
-      name: searchName,
+      id: `search-${Date.now()}`,
+      name,
     };
     
-    const updatedUser = {
-      ...currentUser,
-      savedSearches: [...(currentUser.savedSearches || []), newSearch],
-    };
+    const updatedUser = { ...currentUser, savedSearches: [...(currentUser.savedSearches || []), newSearch] };
     setCurrentUser(updatedUser);
-
-    setAllUsers(prevUsers => 
-      prevUsers.map(u => u.email === currentUser.email ? updatedUser : u)
-    );
-    
-    alert(`Search "${searchName}" saved successfully!`);
+    setAllUsers(prevUsers => prevUsers.map(u => u.email === currentUser.email ? updatedUser : u));
+    alert("Search saved successfully!");
   };
 
   const handleDeleteSearch = (searchId: string) => {
     if (!currentUser) return;
-    
-    if (window.confirm("Are you sure you want to delete this saved search?")) {
-      const updatedSearches = (currentUser.savedSearches || []).filter(s => s.id !== searchId);
-      
-      const updatedUser = {
-        ...currentUser,
-        savedSearches: updatedSearches,
-      };
-      setCurrentUser(updatedUser);
+    const updatedUser = { ...currentUser, savedSearches: currentUser.savedSearches?.filter(s => s.id !== searchId) };
+    setCurrentUser(updatedUser);
+    setAllUsers(prevUsers => prevUsers.map(u => u.email === currentUser.email ? updatedUser : u));
+  };
+  
+  const handleContactSeller = () => {
+      if (!currentUser) {
+          alert("Please log in to contact the seller.");
+          setIsLoginModalOpen(true);
+      } else if (selectedListing) {
+          setContactListing(selectedListing);
+          setSelectedListing(null); // Close detail modal
+      }
+  };
+  
+  const handleMakeOffer = (listing: Listing) => {
+      if (!currentUser) {
+          alert("Please log in to make an offer.");
+          setIsLoginModalOpen(true);
+      } else {
+          setOfferListing(listing);
+          setSelectedListing(null); // Close detail modal if open
+      }
+  };
 
-      setAllUsers(prevUsers => 
-        prevUsers.map(u => u.email === currentUser.email ? updatedUser : u)
-      );
+  const handleSubmitOffer = (offerAmount: string) => {
+      if (offerListing) {
+          alert(`Your offer of ${offerAmount} for "${offerListing.title}" has been sent to the seller.`);
+          setOfferListing(null);
+      }
+  };
+
+  const handleReportListing = (listingId: string, reason: string, details: string) => {
+    const listingToReport = allListings.find(l => l.id === listingId);
+    if (listingToReport) {
+        // In a real app, this would send a report to a server.
+        // For now, we'll just show a confirmation alert.
+        console.log('Reporting listing:', {
+            listingId,
+            title: listingToReport.title,
+            reason,
+            details,
+        });
+        alert(`Thank you for your report. We have received your feedback regarding "${listingToReport.title}" and will review it shortly.`);
     }
   };
 
+  const sortedListings = useMemo(() => {
+    return [...allListings].sort((a, b) => new Date(b.postDate).getTime() - new Date(a.postDate).getTime());
+  }, [allListings]);
+
 
   return (
-    <div className="bg-transparent min-h-screen flex flex-col font-sans">
+    <div className="bg-slate-100 dark:bg-gray-900 min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
       <Header 
         currentUser={currentUser}
-        onPostAdClick={handlePostAdClick}
+        onPostAdClick={() => {
+            if (!currentUser) {
+                alert("Please log in to post an ad.");
+                setIsLoginModalOpen(true);
+            } else {
+                setIsPostAdModalOpen(true);
+            }
+        }}
         onLoginClick={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
         theme={theme}
         onThemeToggle={handleThemeToggle}
       />
 
-      <main className="container mx-auto px-4 py-8 flex-grow">
+      <main className="container mx-auto px-4 py-8">
         <Routes>
-          <Route 
-            path="/" 
-            element={
-              <HomePage 
-                listings={allListings}
-                currentUser={currentUser}
-                onViewDetails={handleViewDetails}
-                onDelete={handleDeleteListing}
-                onSaveSearch={handleSaveSearch}
-              />
-            } 
-          />
-          <Route 
-            path="/profile/:userId" 
-            element={
-              <ProfilePage 
-                allUsers={allUsers}
-                allListings={allListings}
-                currentUser={currentUser}
-                onViewDetails={handleViewDetails}
-                onAddReview={handleAddReview}
-                onDelete={handleDeleteListing}
-                onDeleteSearch={handleDeleteSearch}
-              />
-            }
-          />
+          <Route path="/" element={
+            <HomePage 
+              listings={sortedListings} 
+              currentUser={currentUser} 
+              onViewDetails={setSelectedListing}
+              onDelete={handleDeleteListing}
+              onSaveSearch={handleSaveSearch}
+              onMakeOffer={handleMakeOffer}
+            />
+          } />
+          <Route path="/profile/:userId" element={
+            <ProfilePage 
+              allUsers={allUsers}
+              allListings={sortedListings}
+              currentUser={currentUser}
+              onViewDetails={setSelectedListing}
+              onAddReview={handleAddReview}
+              onDelete={handleDeleteListing}
+              onDeleteSearch={handleDeleteSearch}
+              onMakeOffer={handleMakeOffer}
+            />
+          } />
         </Routes>
       </main>
 
       <Footer />
-      
-      {isPostAdModalOpen && (
-        <PostAdModal
-          isOpen={isPostAdModalOpen}
-          onClose={() => setIsPostAdModalOpen(false)}
-          onPostAd={handlePostAd}
-        />
-      )}
 
       {selectedListing && (
         <ListingDetailModal 
-          listing={selectedListing}
+          listing={selectedListing} 
           onClose={() => setSelectedListing(null)}
           onContactSeller={handleContactSeller}
+          onReportListing={handleReportListing}
         />
       )}
 
+      {isPostAdModalOpen && (
+        <PostAdModal 
+          isOpen={isPostAdModalOpen}
+          onClose={() => setIsPostAdModalOpen(false)}
+          onSubmit={handlePostAd}
+        />
+      )}
+
+      {isLoginModalOpen && (
+        <LoginModal 
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onEmailLogin={handleEmailLogin}
+          onEmailSignUp={handleEmailSignUp}
+          onGoogleLogin={handleGoogleLogin}
+        />
+      )}
+      
       {contactListing && (
-        <ContactSellerModal
+        <ContactSellerModal 
           listing={contactListing}
           onClose={() => setContactListing(null)}
+          onSubmitMessage={(message) => {
+              alert(`Message sent to ${contactListing.seller.name}: "${message}"`);
+              setContactListing(null);
+          }}
         />
       )}
-
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => {
-          setIsLoginModalOpen(false);
-          setActionAfterLogin(null);
-        }}
-        onLoginSuccess={handleLoginSuccess}
-      />
+      
+      {offerListing && (
+        <OfferModal 
+          listing={offerListing}
+          onClose={() => setOfferListing(null)}
+          onSubmitOffer={handleSubmitOffer}
+        />
+      )}
     </div>
   );
-}
+};
 
 export default App;
