@@ -9,9 +9,9 @@ import { ProfilePage } from './components/ProfilePage';
 import { ListingDetailModal } from './components/ListingDetailModal';
 import { PostAdModal } from './components/PostAdModal';
 import { LoginModal } from './components/LoginModal';
-import { ContactSellerModal } from './components/ContactSellerModal';
+import { ChatModal } from './components/ChatModal';
 import { OfferModal } from './components/OfferModal';
-import type { Listing, User, Review, SavedSearch } from './types';
+import type { Listing, User, Review, SavedSearch, ChatThread, Message } from './types';
 
 const MOCK_USERS: User[] = [
     { email: 'john.doe@example.com', name: 'John Doe', joinDate: '2023-01-15T10:00:00Z', savedSearches: [], reviews: [], password: 'password123', phone: '+2348012345678' },
@@ -20,7 +20,7 @@ const MOCK_USERS: User[] = [
 ];
 
 const MOCK_LISTINGS: Listing[] = [
-    { id: '1', title: 'Slightly Used Toyota Camry 2018', description: 'Very clean, accident-free Toyota Camry. Buy and drive.', price: '₦12,500,000', category: 'for-sale-cars-trucks', location: { country: 'Nigeria', state: 'Lagos', city: 'Ikeja' }, imageUrls: ['https://i.ibb.co/6rC6PzT/camry.jpg', 'https://i.ibb.co/gDFs2wL/camry-interior.jpg', 'https://i.ibb.co/xJg3PFr/camry-engine.jpg'], seller: MOCK_USERS[0], postDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true },
+    { id: '1', title: 'Slightly Used Toyota Camry 2018', description: 'Very clean, accident-free Toyota Camry. Buy and drive.', price: '₦12,500,000', category: 'for-sale-cars-trucks', location: { country: 'Nigeria', state: 'Lagos', city: 'Ikeja' }, imageUrls: ['https://i.ibb.co/6rC6PzT/camry.jpg', 'https://i.ibb.co/gDFs2wL/camry-interior.jpg', 'https://i.ibb.co/xJg3PFr/camry-engine.jpg'], seller: MOCK_USERS[0], postDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), isFeatured: true, videoUrl: 'https://www.youtube.com/watch?v=Sc_6G_eTR5E' },
     { id: '2', title: '3 Bedroom Flat for Rent in Lekki Phase 1', description: 'A spacious and well-maintained 3 bedroom flat with all rooms en-suite, fitted kitchen, and ample parking space.', price: '₦5,000,000 / year', category: 'housing-apartments', location: { country: 'Nigeria', state: 'Lagos', city: 'Eti Osa' }, imageUrls: ['https://i.ibb.co/3YYxWbF/apartment.jpg', 'https://i.ibb.co/yqgJm1Q/apartment-living.jpg', 'https://i.ibb.co/B2S05gN/apartment-kitchen.jpg', 'https://i.ibb.co/Xz9d9Yt/apartment-bedroom.jpg'], seller: MOCK_USERS[1], postDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
     { id: '3', title: 'Brand New iPhone 14 Pro Max', description: '256GB, Deep Purple, sealed in box. USA spec.', price: '₦950,000', category: 'for-sale-cell-phones', location: { country: 'Nigeria', state: 'FCT', city: 'Abuja Municipal Area Council' }, imageUrls: ['https://i.ibb.co/D8d3smJ/iphone.jpg', 'https://i.ibb.co/7jWqN7r/iphone-back.jpg', 'https://i.ibb.co/vVRSR1G/iphone-box.jpg'], seller: MOCK_USERS[2], postDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
     { id: '4', title: 'Senior Frontend Engineer (React)', description: 'We are looking for an experienced Frontend Engineer to join our team. Must be proficient in React, TypeScript, and modern CSS.', price: 'Competitive Salary', category: 'jobs-software', location: { country: 'Nigeria', state: 'Lagos', city: 'Lagos Mainland' }, imageUrls: ['https://i.ibb.co/L9jBwLw/job.jpg', 'https://i.ibb.co/7JdkyzQ/office.jpg', 'https://i.ibb.co/wJMyB4F/code.jpg'], seller: MOCK_USERS[1], postDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() },
@@ -36,8 +36,11 @@ const App: React.FC = () => {
   const [isPostAdModalOpen, setIsPostAdModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [contactListing, setContactListing] = useState<Listing | null>(null);
   const [offerListing, setOfferListing] = useState<Listing | null>(null);
+  
+  // Chat state
+  const [chatTarget, setChatTarget] = useState<{ listing: Listing } | null>(null);
+  const [chatThreads, setChatThreads] = useState<ChatThread[]>([]);
   
   const location = useLocation();
 
@@ -190,15 +193,45 @@ const App: React.FC = () => {
     setCurrentUser(updatedUser);
     setAllUsers(prevUsers => prevUsers.map(u => u.email === currentUser.email ? updatedUser : u));
   };
-  
-  const handleContactSeller = () => {
+
+  const handleOpenChat = (listing: Listing) => {
       if (!currentUser) {
           alert("Please log in to contact the seller.");
           setIsLoginModalOpen(true);
-      } else if (selectedListing) {
-          setContactListing(selectedListing);
+      } else if (currentUser.email === listing.seller.email) {
+          alert("You cannot send a message to yourself.");
+      } else {
+          setChatTarget({ listing });
           setSelectedListing(null); // Close detail modal
       }
+  };
+
+  const handleSendMessage = (threadId: string, text: string) => {
+    if (!currentUser) return;
+
+    const newMessage: Message = {
+        id: `msg-${Date.now()}`,
+        sender: currentUser,
+        text,
+        timestamp: new Date().toISOString(),
+    };
+    
+    setChatThreads(prevThreads => {
+        const existingThread = prevThreads.find(t => t.id === threadId);
+        if (existingThread) {
+            return prevThreads.map(t => t.id === threadId ? { ...t, messages: [...t.messages, newMessage] } : t);
+        } else if (chatTarget) {
+            const newThread: ChatThread = {
+                id: threadId,
+                listing: chatTarget.listing,
+                buyer: currentUser,
+                seller: chatTarget.listing.seller,
+                messages: [newMessage],
+            };
+            return [...prevThreads, newThread];
+        }
+        return prevThreads;
+    });
   };
   
   const handleMakeOffer = (listing: Listing) => {
@@ -288,8 +321,9 @@ const App: React.FC = () => {
       {selectedListing && (
         <ListingDetailModal 
           listing={selectedListing} 
+          currentUser={currentUser}
           onClose={() => setSelectedListing(null)}
-          onContactSeller={handleContactSeller}
+          onOpenChat={handleOpenChat}
           onReportListing={handleReportListing}
         />
       )}
@@ -312,15 +346,14 @@ const App: React.FC = () => {
         />
       )}
       
-      {contactListing && (
-        <ContactSellerModal 
-          listing={contactListing}
-          onClose={() => setContactListing(null)}
-          onSubmitMessage={(message) => {
-              alert(`Message sent to ${contactListing.seller.name}: "${message}"`);
-              setContactListing(null);
-          }}
-        />
+      {chatTarget && currentUser && (
+          <ChatModal
+              currentUser={currentUser}
+              listing={chatTarget.listing}
+              chatThreads={chatThreads}
+              onSendMessage={handleSendMessage}
+              onClose={() => setChatTarget(null)}
+          />
       )}
       
       {offerListing && (

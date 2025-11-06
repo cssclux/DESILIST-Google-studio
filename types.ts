@@ -27,6 +27,7 @@ export interface Listing {
   seller: User;
   postDate: string;
   isFeatured?: boolean;
+  videoUrl?: string;
 }
 
 export interface Review {
@@ -61,4 +62,19 @@ export interface SavedSearch {
         sub: string | null;
     };
     filters: string[];
+}
+
+export interface Message {
+    id: string;
+    sender: User;
+    text: string;
+    timestamp: string;
+}
+
+export interface ChatThread {
+    id: string; // e.g., `${listingId}-${buyerEmail}`
+    listing: Listing;
+    buyer: User;
+    seller: User;
+    messages: Message[];
 }

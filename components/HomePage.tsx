@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Listing, User, SavedSearch } from '../types';
 import { ListingCard } from './ListingCard';
-import { MagnifyingGlassIcon, LightBulbIcon, ArrowPathIcon, BookmarkIcon } from './icons/Icons';
+import { MagnifyingGlassIcon, LightBulbIcon, ArrowPathIcon, BookmarkIcon, MapPinIcon } from './icons/Icons';
 import { CategoryNav } from './CategoryNav';
 import { CATEGORIES, NIGERIAN_LOCATIONS } from '../constants';
 import * as geminiService from '../services/geminiService';
@@ -35,6 +35,38 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isSuggestingFilters, setIsSuggestingFilters] = useState(false);
   const debounceTimeoutRef = useRef<number | null>(null);
+  
+  const [locationStatus, setLocationStatus] = useState('Checking...');
+
+  // Geolocation effect
+  useEffect(() => {
+    // Check if location has been set before
+    if (sessionStorage.getItem('location_set')) {
+        setLocationStatus('');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            // We have the user's position, but cannot perform reverse geocoding
+            // without a valid API key. We'll just inform the user.
+            setLocationStatus('Location detected. Please select your state/city manually.');
+            setTimeout(() => setLocationStatus(''), 3000); // Hide status after 3s
+            sessionStorage.setItem('location_set', 'true');
+        },
+        (error) => {
+            console.warn(`Geolocation error: ${error.message}`);
+            if (error.code === error.PERMISSION_DENIED) {
+              setLocationStatus('Location access denied.');
+            } else {
+              setLocationStatus('Could not determine location.');
+            }
+            sessionStorage.setItem('location_set', 'true');
+            setTimeout(() => setLocationStatus(''), 3000);
+        },
+        { timeout: 10000 }
+    );
+}, []);
   
   useEffect(() => {
     if (location.state?.savedSearchCriteria) {
@@ -230,6 +262,12 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
                           <span className="hidden md:inline">Search</span>
                       </button>
                   </form>
+                   {locationStatus && (
+                      <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2 animate-fade-in-down-fast">
+                          <MapPinIcon className="h-4 w-4"/>
+                          <span>{locationStatus}</span>
+                      </div>
+                  )}
               </div>
           </div>
       </section>

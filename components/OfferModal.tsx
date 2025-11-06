@@ -33,7 +33,6 @@ export const OfferModal: React.FC<OfferModalProps> = ({ listing, onClose, onSubm
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="flex items-center gap-4">
-            {/* FIX: Use `imageUrls[0]` as `imageUrl` does not exist on the Listing type. */}
             <img src={listing.imageUrls[0]} alt={listing.title} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
             <div>
               <p className="text-slate-600 dark:text-slate-400 text-sm">Asking Price:</p>

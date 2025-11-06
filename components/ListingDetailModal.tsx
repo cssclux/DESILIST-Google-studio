@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import type { Listing } from '../types';
-import { XMarkIcon, MapPinIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon } from './icons/Icons';
+import type { Listing, User } from '../types';
+import { XMarkIcon, MapPinIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, VideoCameraIcon } from './icons/Icons';
 
 // --- Start of ReportListingModal component ---
 interface ReportListingModalProps {
@@ -107,15 +107,31 @@ const ReportListingModal: React.FC<ReportListingModalProps> = ({ isOpen, listing
 };
 // --- End of ReportListingModal component ---
 
+// Helper function to convert YouTube URL to embeddable URL
+const getYouTubeEmbedUrl = (url: string) => {
+    if (!url) return null;
+    try {
+        const videoUrl = new URL(url);
+        const videoId = videoUrl.searchParams.get('v') || videoUrl.pathname.split('/').pop();
+        if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+        }
+    } catch (error) {
+        console.error("Invalid YouTube URL:", url);
+    }
+    return null;
+};
+
 
 interface ListingDetailModalProps {
   listing: Listing | null;
+  currentUser: User | null;
   onClose: () => void;
-  onContactSeller: () => void;
+  onOpenChat: (listing: Listing) => void;
   onReportListing: (listingId: string, reason: string, details: string) => void;
 }
 
-export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing, onClose, onContactSeller, onReportListing }) => {
+export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing, currentUser, onClose, onOpenChat, onReportListing }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
@@ -148,13 +164,15 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
     month: 'long',
     day: 'numeric',
   });
+  
+  const embedUrl = listing.videoUrl ? getYouTubeEmbedUrl(listing.videoUrl) : null;
 
   return (
     <>
       <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
         <div className="glass-card w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row animate-fade-in-down overflow-hidden" onClick={(e) => e.stopPropagation()}>
-          <div className="w-full md:w-1/2 relative">
-              <img src={listing.imageUrls[currentImageIndex]} alt={listing.title} className="w-full h-64 md:h-full object-cover" />
+          <div className="w-full md:w-1/2 relative bg-gray-900">
+              <img src={listing.imageUrls[currentImageIndex]} alt={listing.title} className="w-full h-64 md:h-full object-contain" />
                {listing.imageUrls.length > 1 && (
                 <>
                   <button onClick={handlePrevImage} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/40 text-white rounded-full hover:bg-black/60 transition-colors z-10">
@@ -198,7 +216,23 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
 
               <div className="text-slate-600 dark:text-slate-300 space-y-4 mb-6 flex-grow">
                   <h3 className="font-bold text-lg text-slate-700 dark:text-slate-200">Description</h3>
-                  <p>{listing.description}</p>
+                  <p className="whitespace-pre-wrap">{listing.description}</p>
+                  
+                  {embedUrl && (
+                    <div className="mt-6">
+                        <h3 className="font-bold text-lg text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2"><VideoCameraIcon className="h-5 w-5"/> Video</h3>
+                        <div className="aspect-video">
+                           <iframe 
+                              src={embedUrl} 
+                              title="YouTube video player" 
+                              frameBorder="0" 
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                              allowFullScreen
+                              className="w-full h-full rounded-lg"
+                           ></iframe>
+                        </div>
+                    </div>
+                  )}
               </div>
               
               <div className="bg-slate-100 dark:bg-slate-700/50 p-4 rounded-lg">
@@ -218,10 +252,11 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
 
               <div className="mt-6 space-y-3">
                   <button 
-                    onClick={onContactSeller}
-                    className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-full w-full shadow-md hover:shadow-lg transition-colors duration-200"
+                    onClick={() => onOpenChat(listing)}
+                    disabled={currentUser?.email === listing.seller.email}
+                    className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-full w-full shadow-md hover:shadow-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                      Contact Seller
+                      {currentUser?.email === listing.seller.email ? "This is Your Ad" : "Chat with Seller"}
                   </button>
                   <button 
                     onClick={() => setIsReportModalOpen(true)}

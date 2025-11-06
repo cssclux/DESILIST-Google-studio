@@ -1,18 +1,33 @@
 
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Listing } from '../types';
 import { CATEGORIES, NIGERIAN_LOCATIONS } from '../constants';
-import { XMarkIcon, SparklesIcon, BeakerIcon, BoltIcon, CameraIcon, PlusIcon } from './icons/Icons';
+import { XMarkIcon, SparklesIcon, BeakerIcon, BoltIcon, CameraIcon, PlusIcon, PhotoIcon, ArrowUpTrayIcon, ArrowPathIcon, VideoCameraIcon } from './icons/Icons';
 import * as geminiService from '../services/geminiService';
 import { CameraCaptureModal } from './CameraCaptureModal';
 
+interface AISuggestions {
+    title: string;
+    description: string;
+    category: string;
+    price: string;
+}
 
 interface PostAdModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (listing: Omit<Listing, 'id' | 'seller' | 'postDate'>) => void;
 }
+
+// Helper to convert file to base64
+const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = error => reject(error);
+});
+
 
 export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSubmit }) => {
     const [title, setTitle] = useState('');
@@ -22,12 +37,15 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
     const [state, setState] = useState('');
     const [city, setCity] = useState('');
     const [imageUrls, setImageUrls] = useState<string[]>([]);
-    const [currentImageUrl, setCurrentImageUrl] = useState('');
+    const [videoUrl, setVideoUrl] = useState('');
     const [keywords, setKeywords] = useState('');
 
     const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
     const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
     const [isSuggestingPrice, setIsSuggestingPrice] = useState(false);
+    
+    const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+    const [aiSuggestions, setAiSuggestions] = useState<AISuggestions | null>(null);
     
     const [isCameraOpen, setIsCameraOpen] = useState(false);
 
@@ -41,8 +59,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
             setState('');
             setCity('');
             setImageUrls([]);
-            setCurrentImageUrl('');
+            setVideoUrl('');
             setKeywords('');
+            setAiSuggestions(null);
         }
     }, [isOpen]);
 
@@ -108,24 +127,53 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
     
     const handlePhotoCapture = (imageDataUrl: string) => {
         if (imageUrls.length < 7) {
-            setImageUrls(prev => [...prev, imageDataUrl]);
+            handleImageAdded(imageDataUrl);
         } else {
             alert("You can add a maximum of 7 images.");
         }
         setIsCameraOpen(false);
     };
 
-    const handleAddImageUrl = () => {
-        if (currentImageUrl.trim() && imageUrls.length < 7) {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const files = Array.from(e.target.files).slice(0, 7 - imageUrls.length);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (event.target?.result) {
+                        handleImageAdded(event.target.result as string);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+    
+    const handleImageAdded = useCallback(async (imageDataUrl: string) => {
+        setImageUrls(prev => [...prev, imageDataUrl]);
+        // Analyze the very first image added
+        if (imageUrls.length === 0 && !aiSuggestions) {
+            setIsAnalyzingImage(true);
             try {
-                new URL(currentImageUrl);
-                setImageUrls(prev => [...prev, currentImageUrl]);
-                setCurrentImageUrl('');
-            } catch (_) {
-                alert("Please enter a valid URL.");
+                const base64Image = imageDataUrl.split(',')[1];
+                const suggestions = await geminiService.analyzeImageForAd(base64Image, CATEGORIES);
+                setAiSuggestions(suggestions);
+            } catch (error) {
+                console.error("Image analysis failed", error);
+                alert("The AI couldn't analyze the image. Please fill in the details manually.");
+            } finally {
+                setIsAnalyzingImage(false);
             }
-        } else if (imageUrls.length >= 7) {
-            alert("You can add a maximum of 7 images.");
+        }
+    }, [imageUrls.length, aiSuggestions]);
+
+    const handleApplyAISuggestions = () => {
+        if (aiSuggestions) {
+            setTitle(aiSuggestions.title || '');
+            setDescription(aiSuggestions.description || '');
+            setCategory(aiSuggestions.category || '');
+            setPrice(aiSuggestions.price || '');
+            setAiSuggestions(null); // Hide suggestions after applying
         }
     };
     
@@ -133,11 +181,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
         setImageUrls(prev => prev.filter((_, index) => index !== indexToRemove));
     };
 
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (imageUrls.length < 3) {
-            alert("Please add a minimum of 3 images.");
+        if (imageUrls.length < 1) {
+            alert("Please add at least 1 image.");
             return;
         }
         if (!title || !description || !price || !category || !state || !city) {
@@ -149,12 +196,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
             description,
             price,
             category,
-            location: {
-                country: 'Nigeria',
-                state,
-                city,
-            },
+            location: { country: 'Nigeria', state, city },
             imageUrls,
+            videoUrl,
         });
     };
 
@@ -172,6 +216,58 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
                 </div>
 
                 <form id="post-ad-form" onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+                    {/* Image Handling */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Ad Images ({imageUrls.length}/7)
+                            <span className="text-red-500 ml-1 font-normal">{imageUrls.length < 1 ? `(Minimum 1 required)` : ''}</span>
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label htmlFor="file-upload" className="dropzone">
+                                <ArrowUpTrayIcon className="h-8 w-8 text-slate-400" />
+                                <span className="font-semibold text-primary">Upload files</span>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">or drag and drop</p>
+                            </label>
+                            <input id="file-upload" type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
+                            <button type="button" onClick={() => setIsCameraOpen(true)} disabled={imageUrls.length >= 7} className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center disabled:opacity-50 h-32">
+                                <CameraIcon className="h-8 w-8 mr-2" />
+                                Use Camera
+                            </button>
+                        </div>
+                        {imageUrls.length > 0 && (
+                            <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
+                                {imageUrls.map((url, index) => (
+                                    <div key={index} className="relative group aspect-square">
+                                        <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover rounded-lg border border-slate-300 dark:border-slate-600" />
+                                        <button type="button" onClick={() => handleRemoveImage(index)} className="absolute top-1 right-1 p-0.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500" title="Remove image">
+                                            <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    
+                    {(isAnalyzingImage || aiSuggestions) && (
+                        <div className="p-4 bg-primary/10 dark:bg-primary/20 rounded-lg animate-fade-in-down-fast">
+                             <div className="flex items-center gap-3 mb-2">
+                                <SparklesIcon className="h-5 w-5 text-primary" />
+                                <h3 className="font-semibold text-slate-700 dark:text-slate-200">AI Suggestions from Image</h3>
+                                {isAnalyzingImage && <ArrowPathIcon className="h-4 w-4 text-slate-500 animate-spin" />}
+                             </div>
+                             {aiSuggestions && (
+                                <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                                    <p><strong>Title:</strong> {aiSuggestions.title}</p>
+                                    <p><strong>Category:</strong> {CATEGORIES.flatMap(c => c.subcategories).find(s => s.id === aiSuggestions.category)?.name || 'N/A'}</p>
+                                    <p><strong>Price:</strong> {aiSuggestions.price}</p>
+                                    <div className="pt-2 text-right">
+                                        <button type="button" onClick={handleApplyAISuggestions} className="bg-primary hover:bg-primary-dark text-white font-bold text-xs py-1.5 px-4 rounded-full">Apply Suggestions</button>
+                                    </div>
+                                </div>
+                             )}
+                        </div>
+                    )}
+
                     {/* Title */}
                     <div>
                         <label htmlFor="title" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Ad Title*</label>
@@ -192,9 +288,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
                             </select>
                         </div>
                         <div className="self-end">
-                            <button type="button" onClick={handleSuggestCategory} disabled={isSuggestingCategory || !title} className="w-full btn-ai">
-                                <SparklesIcon className="h-5 w-5 mr-2"/>
-                                {isSuggestingCategory ? 'Thinking...' : 'Suggest Category'}
+                            <button type="button" onClick={handleSuggestCategory} disabled={isSuggestingCategory || !title} className="ai-button w-full justify-center py-2.5">
+                                <SparklesIcon className="h-5 w-5"/>
+                                {isSuggestingCategory ? 'Thinking...' : 'Suggest Category from Title'}
                             </button>
                         </div>
                     </div>
@@ -217,67 +313,24 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
                         </div>
                     </div>
 
-                    {/* Image Handling */}
+                     {/* Video URL */}
                     <div>
-                        <label htmlFor="imageUrlInput" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Ad Images ({imageUrls.length}/7)
-                            <span className="text-red-500 ml-1 font-normal">{imageUrls.length < 3 ? `(Minimum 3 required)` : ''}</span>
+                        <label htmlFor="videoUrl" className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <VideoCameraIcon className="h-5 w-5"/> YouTube Video URL (Optional)
                         </label>
-                        <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                            <div className="flex items-center">
-                                <input 
-                                    type="text" 
-                                    id="imageUrlInput" 
-                                    value={currentImageUrl} 
-                                    onChange={(e) => setCurrentImageUrl(e.target.value)} 
-                                    className="block w-full input rounded-r-none" 
-                                    placeholder="Paste an image URL here..."
-                                />
-                                <button type="button" onClick={handleAddImageUrl} disabled={imageUrls.length >= 7} className="p-2.5 bg-slate-200 dark:bg-slate-700 rounded-r-md disabled:opacity-50 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
-                                    <PlusIcon className="h-5 w-5 text-slate-600 dark:text-slate-300"/>
-                                </button>
-                            </div>
-                            <button type="button" onClick={() => setIsCameraOpen(true)} disabled={imageUrls.length >= 7} className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center disabled:opacity-50">
-                                <CameraIcon className="h-5 w-5 mr-2" />
-                                Use Camera
-                            </button>
-                        </div>
-                        
-                        {imageUrls.length > 0 && (
-                            <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
-                                {imageUrls.map((url, index) => (
-                                    <div key={index} className="relative group aspect-square">
-                                        <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover rounded-lg border border-slate-300 dark:border-slate-600" />
-                                        <button 
-                                            type="button"
-                                            onClick={() => handleRemoveImage(index)}
-                                            className="absolute top-1 right-1 p-0.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
-                                            title="Remove image"
-                                        >
-                                            <XMarkIcon className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-
-                    {/* Keywords for Description */}
-                    <div>
-                        <label htmlFor="keywords" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Keywords (for AI Description)</label>
-                        <input type="text" id="keywords" value={keywords} onChange={(e) => setKeywords(e.target.value)} className="mt-1 block w-full input" placeholder="e.g., long battery, great camera, scratch-free" />
+                        <input type="url" id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="mt-1 block w-full input" placeholder="e.g., https://www.youtube.com/watch?v=..." />
                     </div>
 
                     {/* Description */}
                     <div>
                         <div className="flex justify-between items-center mb-1">
                             <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description*</label>
-                            <button type="button" onClick={handleGenerateDescription} disabled={isGeneratingDescription || !title} className="btn-ai text-xs px-2 py-1">
-                               <BeakerIcon className="h-4 w-4 mr-1"/>
+                            <button type="button" onClick={handleGenerateDescription} disabled={isGeneratingDescription || !title} className="ai-button">
+                               <BeakerIcon className="h-4 w-4"/>
                                {isGeneratingDescription ? 'Generating...' : 'Generate with AI'}
                             </button>
                         </div>
+                         <input type="text" id="keywords" value={keywords} onChange={(e) => setKeywords(e.target.value)} className="mb-2 block w-full input text-sm" placeholder="Add keywords for AI description (e.g., long battery, scratch-free)" />
                         <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="block w-full input" placeholder="Provide a detailed description of your item or service." required></textarea>
                     </div>
 
@@ -288,13 +341,12 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
                             <input type="text" id="price" value={price} onChange={(e) => setPrice(e.target.value)} className="mt-1 block w-full input" placeholder="e.g., ₦150,000 or 'Negotiable'" required />
                         </div>
                         <div className="self-end">
-                             <button type="button" onClick={handleSuggestPrice} disabled={isSuggestingPrice || !title || !description} className="w-full btn-ai">
-                                <BoltIcon className="h-5 w-5 mr-2"/>
+                             <button type="button" onClick={handleSuggestPrice} disabled={isSuggestingPrice || !title || !description} className="ai-button w-full justify-center py-2.5">
+                                <BoltIcon className="h-5 w-5"/>
                                 {isSuggestingPrice ? 'Calculating...' : 'Suggest Price'}
                             </button>
                         </div>
                     </div>
-                    
                 </form>
 
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-4 flex-shrink-0">

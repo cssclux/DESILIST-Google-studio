@@ -80,7 +80,6 @@ Return only the suggested price string, with no extra explanation.`;
   }
 };
 
-// FIX: Updated suggestFilters to use responseSchema for reliable JSON output.
 export const suggestFilters = async (query: string, categoryName: string): Promise<string[]> => {
   if (!ai || (!query && !categoryName)) {
     return [];
@@ -122,4 +121,74 @@ These filters could be about condition (e.g., 'Brand New', 'Slightly Used'), pri
     // Don't throw, just return empty array to prevent UI crash
     return [];
   }
+};
+
+export const analyzeImageForAd = async (base64Image: string, categories: Category[]): Promise<{title: string, description: string, category: string, price: string}> => {
+    if (!ai) {
+        throw new Error("AI functionality is disabled. Please set your API key.");
+    }
+
+    const flatSubcategories = categories.flatMap(cat => cat.subcategories);
+    const categoryList = flatSubcategories.map(c => `'${c.id}'`).join(', ');
+
+    const imagePart = {
+      inlineData: {
+        mimeType: 'image/jpeg',
+        data: base64Image,
+      },
+    };
+
+    const textPart = {
+        text: `Analyze this image for a classified ad on a Nigerian website (OJA.ng). Based on the image, provide a concise and appealing title, a short descriptive sentence, suggest the best category ID from the provided list, and a realistic price in Nigerian Naira (₦).
+
+        Available category IDs: [${categoryList}]
+        
+        Return ONLY a valid JSON object with the keys "title", "description", "category", and "price".
+        - The title should be short and descriptive (e.g., "Clean 2018 Honda Accord").
+        - The description should be a single, engaging sentence.
+        - The category MUST be one of the exact IDs from the list.
+        - The price should be a string (e.g., "₦12,500,000").
+        `,
+    };
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [imagePart, textPart] },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                        category: { type: Type.STRING },
+                        price: { type: Type.STRING },
+                    },
+                    required: ["title", "description", "category", "price"],
+                }
+            }
+        });
+        
+        const responseText = response.text.trim();
+        try {
+            const suggestions = JSON.parse(responseText);
+            // Additional validation
+            if (flatSubcategories.some(c => c.id === suggestions.category)) {
+                return suggestions;
+            } else {
+                console.warn("Gemini suggested an invalid category:", suggestions.category);
+                // Fallback to a generic category or empty string
+                suggestions.category = ''; 
+                return suggestions;
+            }
+        } catch (e) {
+            console.error("Gemini did not return a valid JSON object for image analysis:", responseText, e);
+            throw new Error("The AI returned an invalid format. Please try again.");
+        }
+
+    } catch (error) {
+        console.error("Error analyzing image with Gemini API:", error);
+        throw new Error("Failed to analyze the image due to an API error. Please try again.");
+    }
 };

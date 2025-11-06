@@ -77,6 +77,9 @@
       .glass-card {
         @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-md;
       }
+      .dropzone {
+        @apply flex flex-col items-center justify-center w-full h-32 px-4 text-center bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:border-primary dark:hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors;
+      }
     </style>
   <script type="importmap">
 {
@@ -90,7 +93,6 @@
   }
 }
 </script>
-<script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
 </head>
   <body>
     <div id="root"></div>
