@@ -211,13 +211,13 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
 
   return (
     <>
-      <section className="relative bg-cover bg-center bg-no-repeat py-24 text-center mb-12 -mt-8 -mx-4">
+      <section className="relative bg-cover bg-center bg-no-repeat py-24 text-center">
           <div
               className="absolute inset-0"
               style={{ backgroundImage: `url(${heroBackgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
             />
-          <div className="absolute inset-0 bg-black/50"></div>
-          <div className="relative z-10 px-4">
+          <div className="absolute inset-0 bg-black/30"></div>
+          <div className="relative z-10 container mx-auto px-4">
               <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">
                   Nigeria's Online Marketplace
               </h1>
@@ -271,78 +271,80 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
               </div>
           </div>
       </section>
+      
+      <div className="container mx-auto px-4 py-8">
+        <CategoryNav 
+            categories={CATEGORIES}
+            onSelectSubcategory={handleSelectSubcategory}
+            onSelectMainCategory={(catId) => {
+                setSelectedMainCategory(catId);
+                setSelectedSubCategory(null);
+            }}
+            selectedMainCategory={selectedMainCategory}
+            selectedSubCategory={selectedSubCategory}
+        />
 
-      <CategoryNav 
-          categories={CATEGORIES}
-          onSelectSubcategory={handleSelectSubcategory}
-          onSelectMainCategory={(catId) => {
-              setSelectedMainCategory(catId);
-              setSelectedSubCategory(null);
-          }}
-          selectedMainCategory={selectedMainCategory}
-          selectedSubCategory={selectedSubCategory}
-      />
-
-      {(isSuggestingFilters || suggestedFilters.length > 0) && (
-        <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 animate-fade-in-down-fast">
-          <div className="flex items-center gap-3 mb-3">
-            <LightBulbIcon className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-slate-700 dark:text-slate-200">AI Suggestions</h3>
-            {isSuggestingFilters && <ArrowPathIcon className="h-4 w-4 text-slate-500 animate-spin" />}
+        {(isSuggestingFilters || suggestedFilters.length > 0) && (
+          <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 animate-fade-in-down-fast">
+            <div className="flex items-center gap-3 mb-3">
+              <LightBulbIcon className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-slate-700 dark:text-slate-200">AI Suggestions</h3>
+              {isSuggestingFilters && <ArrowPathIcon className="h-4 w-4 text-slate-500 animate-spin" />}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestedFilters.map(filter => (
+                <button 
+                  key={filter}
+                  onClick={() => handleFilterToggle(filter)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-200 border ${
+                    activeFilters.includes(filter) 
+                    ? 'bg-primary border-primary text-white shadow-md' 
+                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-slate-700 dark:text-slate-200 hover:border-primary/50 dark:hover:border-primary'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {suggestedFilters.map(filter => (
-              <button 
-                key={filter}
-                onClick={() => handleFilterToggle(filter)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-200 border ${
-                  activeFilters.includes(filter) 
-                  ? 'bg-primary border-primary text-white shadow-md' 
-                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-slate-700 dark:text-slate-200 hover:border-primary/50 dark:hover:border-primary'
-                }`}
-              >
-                {filter}
-              </button>
+        )}
+
+        <div className="mt-6 flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
+            Latest Classifieds
+          </h2>
+          {isSearchActive && (
+            <button
+              onClick={handleSaveSearchClick}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors animate-fade-in-down-fast"
+              title="Save this search"
+            >
+              <BookmarkIcon className="h-5 w-5" />
+              Save Search
+            </button>
+          )}
+        </div>
+
+        {filteredListings.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredListings.map((listing) => (
+              <ListingCard 
+                key={listing.id} 
+                listing={listing} 
+                onViewDetails={onViewDetails}
+                currentUser={currentUser}
+                onDelete={onDelete}
+                onMakeOffer={onMakeOffer}
+              />
             ))}
           </div>
-        </div>
-      )}
-
-      <div className="mt-6 flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
-          Latest Classifieds
-        </h2>
-        {isSearchActive && (
-          <button
-            onClick={handleSaveSearchClick}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors animate-fade-in-down-fast"
-            title="Save this search"
-          >
-            <BookmarkIcon className="h-5 w-5" />
-            Save Search
-          </button>
+        ) : (
+          <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <h3 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">No Listings Found</h3>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">Try adjusting your search or location filters.</p>
+          </div>
         )}
       </div>
-
-      {filteredListings.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredListings.map((listing) => (
-            <ListingCard 
-              key={listing.id} 
-              listing={listing} 
-              onViewDetails={onViewDetails}
-              currentUser={currentUser}
-              onDelete={onDelete}
-              onMakeOffer={onMakeOffer}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-          <h3 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">No Listings Found</h3>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Try adjusting your search or location filters.</p>
-        </div>
-      )}
     </>
   );
 };

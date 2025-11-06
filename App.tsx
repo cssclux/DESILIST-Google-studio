@@ -289,7 +289,7 @@ const App: React.FC = () => {
         onThemeToggle={handleThemeToggle}
       />
 
-      <main className="container mx-auto px-4 py-8">
+      <main>
         <Routes>
           <Route path="/" element={
             <HomePage 
