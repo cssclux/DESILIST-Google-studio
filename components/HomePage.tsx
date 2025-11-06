@@ -211,13 +211,13 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
 
   return (
     <>
-      <section className="relative bg-cover bg-center bg-no-repeat py-24 px-4 text-center mb-12 -mt-8 -mx-4">
+      <section className="relative bg-cover bg-center bg-no-repeat py-24 text-center mb-12 -mt-8 -mx-4">
           <div
               className="absolute inset-0"
               style={{ backgroundImage: `url(${heroBackgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
             />
-          <div className="absolute inset-0 bg-black/75"></div>
-          <div className="relative z-10">
+          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="relative z-10 px-4">
               <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-4">
                   Nigeria's Online Marketplace
               </h1>
