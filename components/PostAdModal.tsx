@@ -206,9 +206,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
 
     return (
         <>
-        <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4" onClick={onClose}>
             <div className="glass-card w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in-down" onClick={(e) => e.stopPropagation()}>
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center flex-shrink-0">
+                <div className="p-4 border-b border-gray-200/80 dark:border-gray-700/80 flex justify-between items-center flex-shrink-0">
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Create a New Ad</h2>
                     <button onClick={onClose} className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
                         <XMarkIcon className="h-6 w-6" />
@@ -349,7 +349,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSub
                     </div>
                 </form>
 
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-4 flex-shrink-0">
+                <div className="p-4 border-t border-gray-200/80 dark:border-gray-700/80 flex justify-end gap-4 flex-shrink-0">
                     <button type="button" onClick={onClose} className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
                         Cancel
                     </button>

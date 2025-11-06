@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, GoogleIcon } from './icons/Icons';
 
@@ -66,9 +67,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onEmail
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4" onClick={onClose}>
       <div className="glass-card w-full max-w-md relative animate-fade-in-down" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200/80 dark:border-gray-700/80">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
             {mode === 'login' ? 'Welcome Back!' : 'Create an Account'}
           </h2>

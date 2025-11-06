@@ -71,7 +71,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ isOpen, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-center items-center p-4" onClick={onClose}>
       <div className="bg-gray-900 w-full max-w-2xl relative animate-fade-in-down overflow-hidden rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="p-4 border-b border-gray-700 flex justify-between items-center">
           <h2 className="text-xl font-bold text-white">Capture Photo</h2>

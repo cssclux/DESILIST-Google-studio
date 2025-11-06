@@ -47,9 +47,9 @@ const ReportListingModal: React.FC<ReportListingModalProps> = ({ isOpen, listing
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-[60] flex justify-center items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex justify-center items-center p-4" onClick={onClose}>
       <div className="glass-card w-full max-w-lg relative animate-fade-in-down" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200/80 dark:border-gray-700/80">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Report Listing</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 truncate">Reporting: {listing.title}</p>
           <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
@@ -160,7 +160,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
   
   const handleNextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex(prev => (prev === listing.imageUrls.length - 1 ? 0 : prev + 1));
+    setCurrentImageIndex(prev => (prev === listing.imageUrls.length - 1 ? 0 : prev - 1));
   };
 
   const handleReportSubmit = (reason: string, details: string) => {
@@ -203,7 +203,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4" onClick={onClose}>
         <div className="glass-card w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row animate-fade-in-down overflow-hidden" onClick={(e) => e.stopPropagation()}>
           <div className="w-full md:w-1/2 relative bg-gray-900">
               <img src={listing.imageUrls[currentImageIndex]} alt={listing.title} className="w-full h-64 md:h-full object-contain" />
@@ -237,7 +237,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
               
               <p className="text-primary dark:text-primary-dark font-extrabold text-4xl mb-4">{listing.price}</p>
               
-              <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4 pb-4 border-b border-gray-200/80 dark:border-gray-700/80">
                   <div className="flex items-center">
                       <MapPinIcon className="h-4 w-4 mr-1.5" />
                       <span>{`${listing.location.city}, ${listing.location.state}`}</span>
@@ -269,7 +269,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
                   )}
               </div>
               
-              <div className="bg-slate-100 dark:bg-slate-700/50 p-4 rounded-lg">
+              <div className="bg-slate-100/80 dark:bg-slate-700/50 p-4 rounded-lg">
                   <h3 className="font-bold text-lg text-slate-700 dark:text-slate-200 mb-2">Seller Information</h3>
                   <p className="text-slate-600 dark:text-slate-300">
                     <strong>Posted by:</strong>

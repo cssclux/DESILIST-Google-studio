@@ -21,9 +21,9 @@ export const OfferModal: React.FC<OfferModalProps> = ({ listing, onClose, onSubm
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4" onClick={onClose}>
       <div className="glass-card w-full max-w-md relative animate-fade-in-down overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200/80 dark:border-gray-700/80">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Make an Offer</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 truncate">{listing.title}</p>
           <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">

@@ -206,7 +206,7 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="bg-slate-100 dark:bg-gray-900 min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
+    <div className="bg-transparent min-h-screen font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
       <Header 
         currentUser={currentUser}
         onPostAdClick={() => {

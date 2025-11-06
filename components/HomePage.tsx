@@ -225,20 +225,20 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
                   Buy & Sell Anything in Nigeria. Find Cars, Jobs, Real Estate & more.
               </p>
               
-              <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
+              <div className="max-w-4xl mx-auto glass-card p-4">
                   <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-3">
                       <div className="relative md:col-span-2">
                           <MagnifyingGlassIcon className="absolute top-1/2 left-4 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <input 
                               type="text" 
                               placeholder="What are you looking for?"
-                              className="w-full pl-12 pr-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-transparent focus:border-primary focus:ring-primary rounded-lg transition"
+                              className="w-full pl-12 pr-4 py-3 bg-gray-100 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200 border-transparent focus:border-primary focus:ring-primary rounded-lg transition"
                               value={searchTerm}
                               onChange={(e) => setSearchTerm(e.target.value)}
                           />
                       </div>
                       <select 
-                          className="w-full md:col-span-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-transparent focus:border-primary focus:ring-primary rounded-lg transition"
+                          className="w-full md:col-span-1 px-4 py-3 bg-gray-100 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200 border-transparent focus:border-primary focus:ring-primary rounded-lg transition"
                           value={selectedState}
                           onChange={handleStateChange}
                       >
@@ -246,7 +246,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
                           {NIGERIAN_LOCATIONS.map(loc => <option key={loc.state} value={loc.state} className="bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200">{loc.state}</option>)}
                       </select>
                       <select 
-                          className="w-full md:col-span-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-transparent focus:border-primary focus:ring-primary rounded-lg transition"
+                          className="w-full md:col-span-1 px-4 py-3 bg-gray-100 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200 border-transparent focus:border-primary focus:ring-primary rounded-lg transition"
                           value={selectedCity}
                           onChange={(e) => setSelectedCity(e.target.value)}
                           disabled={!selectedState}
@@ -285,7 +285,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
         />
 
         {(isSuggestingFilters || suggestedFilters.length > 0) && (
-          <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 animate-fade-in-down-fast">
+          <div className="mb-8 p-4 glass-card animate-fade-in-down-fast">
             <div className="flex items-center gap-3 mb-3">
               <LightBulbIcon className="h-5 w-5 text-primary" />
               <h3 className="font-semibold text-slate-700 dark:text-slate-200">AI Suggestions</h3>
@@ -299,7 +299,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
                   className={`px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-200 border ${
                     activeFilters.includes(filter) 
                     ? 'bg-primary border-primary text-white shadow-md' 
-                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-slate-700 dark:text-slate-200 hover:border-primary/50 dark:hover:border-primary'
+                    : 'bg-gray-100 dark:bg-gray-700/80 border-gray-300 dark:border-gray-600/80 text-slate-700 dark:text-slate-200 hover:border-primary/50 dark:hover:border-primary'
                   }`}
                 >
                   {filter}
@@ -339,7 +339,7 @@ export const HomePage: React.FC<HomePageProps> = ({ listings, currentUser, onVie
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <div className="text-center py-16 glass-card">
             <h3 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">No Listings Found</h3>
             <p className="text-slate-500 dark:text-slate-400 mt-2">Try adjusting your search or location filters.</p>
           </div>

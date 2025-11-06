@@ -33,9 +33,9 @@ export const ContactSellerModal: React.FC<ContactSellerModalProps> = ({ listing,
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4" onClick={onClose}>
       <div className="glass-card w-full max-w-lg relative animate-fade-in-down" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200/80 dark:border-gray-700/80">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Contact Seller</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 truncate">Regarding: {listing.title}</p>
           <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
@@ -57,7 +57,7 @@ export const ContactSellerModal: React.FC<ContactSellerModalProps> = ({ listing,
           </div>
         </form>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center gap-4">
+        <div className="p-4 border-t border-gray-200/80 dark:border-gray-700/80 flex justify-between items-center gap-4">
             <button type="button" onClick={onClose} className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold py-2 px-6 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
               Cancel
             </button>
